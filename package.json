@@ -1,0 +1,54 @@
+{
+  "name": "hmsovereign",
+  "version": "0.1.0",
+  "description": "Official HMS Sovereign Node.js/TypeScript SDK for the Voice AI Platform API",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "test:smoke": "tsx tests/smoke.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "hms-sovereign",
+    "voice-ai",
+    "telephony",
+    "stt",
+    "tts",
+    "llm",
+    "ai-agents",
+    "sip",
+    "voip"
+  ],
+  "author": "Flireo BV <support@flireo.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flireo-bv-org/hmsovereign-node"
+  },
+  "homepage": "https://doc.hmsovereign.com",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.0"
+  }
+}
