@@ -3,7 +3,6 @@
 Official Node.js/TypeScript SDK for the [HMS Sovereign](https://hmsovereign.com) Voice AI Platform API.
 
 [![CI](https://github.com/flireo-bv-org/hmsovereign-node/actions/workflows/ci.yml/badge.svg)](https://github.com/flireo-bv-org/hmsovereign-node/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/hmsovereign)](https://www.npmjs.com/package/hmsovereign)
 
 ## Installation
 
@@ -256,7 +255,7 @@ const client = new HmsSovereign({
 
 ## Requirements
 
-- Node.js 18+ (uses native `fetch`)
+- Node.js 20+ (uses native `fetch`)
 - Zero runtime dependencies
 
 ## Links
