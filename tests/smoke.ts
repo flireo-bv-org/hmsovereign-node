@@ -15,9 +15,9 @@ if (!API_KEY) {
 }
 
 // We import from the built dist so this also validates the build output
-import { HmsSovereign } from "../src/index";
+import { HMSSovereign } from "../src/index";
 
-const client = new HmsSovereign({
+const client = new HMSSovereign({
   apiKey: API_KEY,
   debug: true,
 });

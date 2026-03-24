@@ -51,7 +51,7 @@ export class HttpClient {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
-      "User-Agent": "hmsovereign-node/0.1.0",
+      "User-Agent": "hmsovereign-node/1.0.0",
     };
 
     let lastError: Error | undefined;

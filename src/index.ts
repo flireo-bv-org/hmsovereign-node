@@ -13,7 +13,7 @@ import { AnalysisTemplates } from "./resources/analysis-templates";
 import { Domains } from "./resources/domains";
 import { Organizations } from "./resources/organizations";
 
-export class HmsSovereign {
+export class HMSSovereign {
   readonly assistants: Assistants;
   readonly calls: Calls;
   readonly numbers: Numbers;
@@ -44,6 +44,9 @@ export class HmsSovereign {
     this.organizations = new Organizations(client);
   }
 }
+
+/** @deprecated Use HMSSovereign instead */
+export const HmsSovereign = HMSSovereign;
 
 // Re-export everything
 export { Page, AutoPaginator } from "./pagination";

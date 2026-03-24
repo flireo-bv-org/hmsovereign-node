@@ -13,9 +13,9 @@ npm install hmsovereign
 ## Quick Start
 
 ```typescript
-import { HmsSovereign } from 'hmsovereign';
+import { HMSSovereign } from 'hmsovereign';
 
-const client = new HmsSovereign({
+const client = new HMSSovereign({
   apiKey: 'fl_live_...',
 });
 
@@ -244,7 +244,7 @@ try {
 ## Configuration
 
 ```typescript
-const client = new HmsSovereign({
+const client = new HMSSovereign({
   apiKey: 'fl_live_...',        // Required
   baseUrl: 'https://...',       // Default: https://api.hmsovereign.com/api/v1
   maxRetries: 2,                // Default: 2 (retries on 5xx and 429)

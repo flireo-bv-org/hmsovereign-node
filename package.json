@@ -1,6 +1,6 @@
 {
   "name": "hmsovereign",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "Official HMS Sovereign Node.js/TypeScript SDK for the Voice AI Platform API",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

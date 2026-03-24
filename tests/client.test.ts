@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { HmsSovereign, AuthenticationError } from "../src/index";
+import { HMSSovereign, AuthenticationError } from "../src/index";
 
-describe("HmsSovereign", () => {
+describe("HMSSovereign", () => {
   it("throws AuthenticationError without API key", () => {
-    expect(() => new HmsSovereign({ apiKey: "" })).toThrow(AuthenticationError);
+    expect(() => new HMSSovereign({ apiKey: "" })).toThrow(AuthenticationError);
   });
 
   it("creates client with valid API key", () => {
-    const client = new HmsSovereign({ apiKey: "fl_test_123" });
+    const client = new HMSSovereign({ apiKey: "fl_test_123" });
 
     expect(client.assistants).toBeDefined();
     expect(client.calls).toBeDefined();
