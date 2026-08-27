@@ -1,0 +1,50 @@
+# Dependabot-configuratie.
+#
+# WAAROM DIT BESTAAT: op 26-08-2026 bleek in de orchestrator dat Dependabot zonder
+# configuratie zijn PR's op de standaardbranch richt, waardoor een bump staging
+# oversloeg. Bij die ronde is elke VoiceDock-repo nagelopen.
+#
+# GEEN target-branch, en dat is hier geen omissie. Deze repo heeft alleen `main`;
+# er is geen develop om een bump eerst op te laten landen. Dat is een afwijking van
+# de git-flow die sinds 27-07-2026 voor alle repo's zou gelden, maar die afwijking
+# oplossen is een aparte beslissing en niet iets om in een dependabot-bestand te
+# verstoppen. Zolang die er niet is, gaat een bump naar main met de CI van
+# .github/workflows/ci.yml als enige poort.
+#
+# LET OP BIJ HET MERGEN: dit is een gepubliceerd npm-pakket (`hmsovereign`). Een bump
+# van een runtime-dependency verandert wat een klant meekrijgt bij installatie. De
+# publicatie loopt via .github/workflows/publish.yml en gebeurt niet vanzelf bij een
+# merge, dus een bump is pas bij klanten na een bewuste release.
+
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: build(deps)
+    groups:
+      # Typescript en zijn types horen bij elkaar.
+      typescript:
+        patterns:
+          - typescript
+          - "@types/*"
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: build(deps)
