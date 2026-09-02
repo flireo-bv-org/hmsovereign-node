@@ -1,0 +1,15 @@
+{
+  // Typechecking the TESTS. The root tsconfig covers `src` only (it is the build
+  // config: rootDir src, declaration output), so `tsc --noEmit` never looked at a
+  // single line under tests/. That makes a type-level mistake in a test invisible:
+  // vitest strips types without checking them.
+  //
+  // vitest.config.ts points its typecheck runner at this file, so `vitest run` also
+  // reports type errors in tests/**/*.test-d.ts as failing tests.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src", "tests"]
+}

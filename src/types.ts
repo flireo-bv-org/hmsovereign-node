@@ -18,9 +18,115 @@ export interface ApiError {
   type?: string;
 }
 
-// --- STT Config ---
+// --- Providers ---
+//
+// The provider ids below mirror the platform catalog (`catalog/config-catalog.yaml`
+// in the api-spec repo, published as `catalog/config-catalog.json`). That catalog is
+// the single source of truth: the API validates a config against it, and a provider
+// it knows but this SDK does not is a provider you cannot express in TypeScript.
+//
+// They are runtime arrays rather than bare unions so `tests/catalog.test.ts` can
+// compare them against a vendored copy of the catalog. The union is derived from the
+// array, so the two can never drift from each other.
 
-export type STTProvider = "deepgram" | "elevenlabs" | "gladia" | "mistral";
+/** Speech-to-text providers (catalog section `stt`). */
+export const STT_PROVIDERS = ["deepgram", "elevenlabs", "gladia", "mistral"] as const;
+
+export type STTProvider = (typeof STT_PROVIDERS)[number];
+
+/**
+ * Text (pipeline) LLM providers: the ones that transcribe, think and speak in
+ * separate steps. A workflow node may only override to one of these - a realtime
+ * provider per node is rejected at write time.
+ */
+export const TEXT_LLM_PROVIDERS = ["openai", "xai", "mistral"] as const;
+
+export type TextLLMProvider = (typeof TEXT_LLM_PROVIDERS)[number];
+
+/** Realtime (speech-to-speech) LLM providers. */
+export const REALTIME_LLM_PROVIDERS = ["google_realtime", "xai_realtime"] as const;
+
+export type RealtimeLLMProvider = (typeof REALTIME_LLM_PROVIDERS)[number];
+
+/** Every LLM provider an assistant can run on (catalog section `llm`). */
+export const LLM_PROVIDERS = [...TEXT_LLM_PROVIDERS, ...REALTIME_LLM_PROVIDERS] as const;
+
+export type LLMProvider = (typeof LLM_PROVIDERS)[number];
+
+/** Text-to-speech providers (catalog section `tts`). */
+export const TTS_PROVIDERS = ["elevenlabs", "inworld", "google", "xai"] as const;
+
+export type TTSProvider = (typeof TTS_PROVIDERS)[number];
+
+/** Speech-to-speech voices of Google Gemini Live (`llm_config.provider: "google_realtime"`). */
+export const GOOGLE_REALTIME_VOICES = [
+  "Puck",
+  "Achernar",
+  "Achird",
+  "Algenib",
+  "Algieba",
+  "Alnilam",
+  "Aoede",
+  "Autonoe",
+  "Callirrhoe",
+  "Charon",
+  "Despina",
+  "Enceladus",
+  "Erinome",
+  "Fenrir",
+  "Gacrux",
+  "Iapetus",
+  "Kore",
+  "Laomedeia",
+  "Leda",
+  "Orus",
+  "Pulcherrima",
+  "Rasalgethi",
+  "Sadachbia",
+  "Sadaltager",
+  "Schedar",
+  "Sulafat",
+  "Umbriel",
+  "Vindemiatrix",
+  "Zephyr",
+  "Zubenelgenubi",
+] as const;
+
+export type GoogleRealtimeVoice = (typeof GOOGLE_REALTIME_VOICES)[number];
+
+/** Speech-to-speech voices of xAI Grok Realtime (`llm_config.provider: "xai_realtime"`). */
+export const XAI_REALTIME_VOICES = [
+  "ara",
+  "eve",
+  "leo",
+  "rex",
+  "sal",
+  "altair",
+  "atlas",
+  "carina",
+  "castor",
+  "celeste",
+  "cosmo",
+  "helios",
+  "helix",
+  "iris",
+  "kepler",
+  "lumen",
+  "luna",
+  "lux",
+  "naksh",
+  "orion",
+  "perseus",
+  "rigel",
+  "sirius",
+  "ursa",
+  "zagan",
+  "zenith",
+] as const;
+
+export type XAIRealtimeVoice = (typeof XAI_REALTIME_VOICES)[number];
+
+// --- STT Config ---
 
 export interface STTConfig {
   provider: STTProvider;
@@ -51,8 +157,6 @@ export interface STTConfig {
 
 // --- LLM Config ---
 
-export type LLMProvider = "openai" | "xai_realtime" | "xai" | "mistral";
-
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
   content: string;
@@ -77,16 +181,14 @@ export interface ToolDefinition {
 export interface LLMConfig {
   provider: LLMProvider;
   model: string;
-  /** xAI Realtime only */
-  voice?: "ara" | "rex" | "sal" | "eve" | "leo";
+  /** Realtime providers only: the speech-to-speech voice of the model */
+  voice?: GoogleRealtimeVoice | XAIRealtimeVoice;
   temperature?: number;
   messages?: LLMMessage[];
   tools?: ToolDefinition[];
 }
 
 // --- TTS Config ---
-
-export type TTSProvider = "elevenlabs" | "inworld";
 
 export interface TTSConfig {
   provider: TTSProvider;
@@ -236,10 +338,79 @@ export interface WorkflowNodeUi {
  * pickup. The entry node's override applies to the whole session.
  */
 export interface WorkflowNodeLLMConfig {
-  provider?: LLMProvider;
+  /**
+   * Text providers only. A realtime provider here is rejected at write time
+   * (`realtime_provider_not_allowed_per_node`), so the union is narrower than
+   * an assistant's `llm_config.provider`.
+   */
+  provider?: TextLLMProvider;
   model?: string;
   temperature?: number;
 }
+
+/**
+ * Built-in tool: the platform supplies the name, the description and the handler.
+ * `end_call` lets the assistant hang up by itself.
+ */
+export interface WorkflowNodeEndCallTool {
+  type: "end_call" | "endCall";
+}
+
+/** Built-in tool: hands the caller over to one of the listed destinations. */
+export interface WorkflowNodeTransferCallTool {
+  type: "transfer_call" | "transferCall";
+  destinations: Array<{
+    type: "number";
+    /** E.164, e.g. "+31612345678" */
+    number: string;
+    /** Shown to the model so it knows when to pick this destination */
+    description: string;
+    /** Spoken to the caller before transferring */
+    message?: string;
+  }>;
+}
+
+/**
+ * Webhook tool in the platform's own (flat) format: the name and the parameters
+ * sit at the top level, and the call lands on your tool-calls webhook.
+ */
+export interface WorkflowNodeWebhookTool {
+  /** Unique tool name; this is what the model calls and what the webhook receives */
+  name: string;
+  /** Tells the model when and how to use this tool */
+  description: string;
+  /** JSON Schema for the tool's arguments */
+  parameters?: Record<string, unknown>;
+  /** Per-tool webhook URL, overriding the one resolved for the call */
+  url?: string;
+  /** Same override, nested (MCP/Vapi style). `url` wins when both are set. */
+  server?: {
+    url: string;
+    secret?: string;
+  };
+  /** Fire-and-forget: don't wait for the webhook's response */
+  async?: boolean;
+  /** What the assistant says while the tool runs (async tools: instead of the result) */
+  message?: string;
+  /** Legacy spelling of `message`, still accepted by the engine */
+  async_response?: string;
+}
+
+/**
+ * A tool on a conversation node, in the same format as assistant tools.
+ *
+ * Three shapes reach the same factory (`tools.py:_normalize_tool_definition`):
+ * the built-ins above, the flat webhook tool the API documents, and the nested
+ * OpenAI shape (`{ type: "function", function: { ... } }`) that the engine
+ * normalizes for compatibility. `ToolDefinition` alone would have accepted only
+ * that last one, and its required `type: "function"` made the two documented
+ * shapes unrepresentable.
+ */
+export type WorkflowNodeToolDefinition =
+  | WorkflowNodeEndCallTool
+  | WorkflowNodeTransferCallTool
+  | WorkflowNodeWebhookTool
+  | ToolDefinition;
 
 /**
  * A talking step: the assistant converses with the caller under this node's
@@ -278,7 +449,7 @@ export interface WorkflowConversationNode {
    */
   stt_config?: STTConfig;
   /** Tools available in this node, in the same format as assistant tools */
-  tools?: ToolDefinition[];
+  tools?: WorkflowNodeToolDefinition[];
   ui?: WorkflowNodeUi;
 }
 
@@ -356,26 +527,37 @@ export interface WorkflowDefinition {
   edges?: WorkflowEdge[];
 }
 
+/**
+ * Only `id`, `name`, `is_active` and `definition` are guaranteed by the spec
+ * (`Workflow.yaml`); the timestamps are documented but not required, so they are
+ * optional here rather than something you can dereference blind.
+ */
 export interface Workflow {
   id: string;
   name: string;
   /** When false, attached numbers fall back to their assistant's normal behaviour */
   is_active: boolean;
   definition: WorkflowDefinition;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-/** List item: the graph is summarized, request a single workflow for the full definition. */
+/**
+ * List item: the graph is summarized, request a single workflow for the full
+ * definition. `WorkflowSummary.yaml` declares no required properties at all, so
+ * every field is optional here. The list route does fill all eight in today - if
+ * that is meant to be a promise, the spec is the place to say so, and this type
+ * can tighten with it.
+ */
 export interface WorkflowSummary {
-  id: string;
-  name: string;
-  is_active: boolean;
-  entry_node: string | null;
-  node_count: number;
-  edge_count: number;
-  created_at: string;
-  updated_at: string;
+  id?: string;
+  name?: string;
+  is_active?: boolean;
+  entry_node?: string | null;
+  node_count?: number;
+  edge_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface WorkflowCreateParams {

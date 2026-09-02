@@ -1,0 +1,665 @@
+{
+  "_meta": {
+    "note": "GEGENEREERD uit catalog/config-catalog.yaml door scripts/gen-config-schemas.mjs. Niet met de hand bewerken; bewerk de YAML en draai npm run gen:schemas.",
+    "source_repo": "https://github.com/flireo-bv-org/voicedock-api-spec",
+    "source_path": "catalog/config-catalog.yaml",
+    "published_path": "catalog/config-catalog.json"
+  },
+  "version": 1,
+  "pricing_units": {
+    "llm": [
+      "per_1m_input_tokens",
+      "per_1m_output_tokens"
+    ],
+    "realtime": [
+      "per_minute",
+      "per_1m_audio_tokens_in",
+      "per_1m_audio_tokens_out",
+      "per_1m_cached_audio_tokens",
+      "per_1m_input_tokens",
+      "per_1m_output_tokens"
+    ],
+    "stt": [
+      "per_minute_streaming",
+      "per_minute",
+      "per_hour",
+      "per_minute_batch"
+    ],
+    "tts": [
+      "per_1k_chars",
+      "per_1m_chars",
+      "per_1m_input_tokens",
+      "per_1m_output_tokens"
+    ]
+  },
+  "llm": {
+    "providers": [
+      {
+        "id": "openai",
+        "label": "OpenAI",
+        "kind": "text",
+        "byok_secret": "openai_secret_id",
+        "default_model": "gpt-5.4",
+        "postcall_model": "gpt-5.4-mini",
+        "models": [
+          "gpt-5.4",
+          "gpt-5.4-mini",
+          "gpt-5.4-nano",
+          "gpt-5.2",
+          "gpt-5.1",
+          "gpt-5",
+          "gpt-5-mini",
+          "gpt-5-nano",
+          "gpt-4.1",
+          "gpt-4.1-mini",
+          "gpt-4.1-nano",
+          "gpt-5.6-luna",
+          "gpt-5.6-terra",
+          "gpt-5.6-sol",
+          "gpt-4o-mini"
+        ],
+        "legacy_models": [
+          "gpt-4o-mini"
+        ],
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        },
+        "reasoning_effort": {
+          "pin": "none",
+          "models": [
+            "gpt-5.6-luna",
+            "gpt-5.6-terra",
+            "gpt-5.6-sol",
+            "gpt-5.4",
+            "gpt-5.4-mini",
+            "gpt-5.4-nano"
+          ]
+        }
+      },
+      {
+        "id": "xai",
+        "label": "xAI (Grok text)",
+        "kind": "text",
+        "byok_secret": "xai_secret_id",
+        "default_model": "grok-4.3",
+        "postcall_model": "grok-4.3",
+        "models": [
+          "grok-4.3"
+        ],
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        },
+        "reasoning_effort": {
+          "pin": "none",
+          "models": [
+            "grok-4.3"
+          ]
+        }
+      },
+      {
+        "id": "mistral",
+        "label": "Mistral",
+        "kind": "text",
+        "byok_secret": "mistral_secret_id",
+        "default_model": "mistral-medium-latest",
+        "models": [
+          "mistral-medium-latest",
+          "mistral-small-latest",
+          "mistral-large-latest",
+          "ministral-8b-latest",
+          "ministral-14b-latest",
+          "ministral-3b-latest"
+        ],
+        "postcall_model": "mistral-medium-latest",
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        }
+      },
+      {
+        "id": "google_realtime",
+        "label": "Google Gemini Live",
+        "kind": "realtime",
+        "byok_secret": [
+          "google_secret_id",
+          "google_vertex_secret_id"
+        ],
+        "default_model": "gemini-live-2.5-flash-native-audio",
+        "postcall_model": {
+          "google_secret_id": "gemini-3.5-flash-lite",
+          "google_vertex_secret_id": "gemini-2.5-flash-lite"
+        },
+        "models": [
+          "gemini-live-2.5-flash-native-audio",
+          "gemini-2.5-flash-native-audio-preview-12-2025",
+          "gemini-3.1-flash-live-preview"
+        ],
+        "legacy_models": [
+          "gemini-2.5-flash-native-audio-preview-12-2025"
+        ],
+        "model_requires": {
+          "gemini-live-2.5-flash-native-audio": "google_vertex_secret_id",
+          "gemini-2.5-flash-native-audio-preview-12-2025": "google_secret_id",
+          "gemini-3.1-flash-live-preview": "google_secret_id"
+        },
+        "pricing": {
+          "type": "realtime",
+          "units": [
+            "per_1m_audio_tokens_in",
+            "per_1m_audio_tokens_out"
+          ],
+          "exempt": {
+            "gemini-live-2.5-flash-native-audio": "Het Vertex-pad gaat all-in voor EUR 0,25 per minuut via de DB-trigger. usage_billing slaat dit model bewust over (_is_vertex_realtime matcht op de naam), dus een prijsrij zou nooit gelezen worden. De vrijstelling geldt alleen voor deze naam: de AI-Studio-naam van dezelfde generatie loopt wel over de tokenprijzen en heeft dus wel rijen nodig."
+          }
+        },
+        "default_voice": "Puck",
+        "voices": [
+          "Puck",
+          "Achernar",
+          "Achird",
+          "Algenib",
+          "Algieba",
+          "Alnilam",
+          "Aoede",
+          "Autonoe",
+          "Callirrhoe",
+          "Charon",
+          "Despina",
+          "Enceladus",
+          "Erinome",
+          "Fenrir",
+          "Gacrux",
+          "Iapetus",
+          "Kore",
+          "Laomedeia",
+          "Leda",
+          "Orus",
+          "Pulcherrima",
+          "Rasalgethi",
+          "Sadachbia",
+          "Sadaltager",
+          "Schedar",
+          "Sulafat",
+          "Umbriel",
+          "Vindemiatrix",
+          "Zephyr",
+          "Zubenelgenubi"
+        ]
+      },
+      {
+        "id": "xai_realtime",
+        "label": "xAI (Grok Realtime)",
+        "kind": "realtime",
+        "byok_secret": "xai_secret_id",
+        "default_model": "grok-voice-think-fast-2.0",
+        "postcall_model": "grok-4.3",
+        "models": [
+          "grok-voice-think-fast-2.0",
+          "grok-voice-think-fast-1.0",
+          "grok-voice-latest",
+          "grok-realtime-v1"
+        ],
+        "legacy_models": [
+          "grok-voice-latest",
+          "grok-realtime-v1"
+        ],
+        "pricing": {
+          "type": "realtime",
+          "units": [
+            "per_minute"
+          ]
+        },
+        "default_voice": "ara",
+        "voices": [
+          "ara",
+          "eve",
+          "leo",
+          "rex",
+          "sal",
+          "altair",
+          "atlas",
+          "carina",
+          "castor",
+          "celeste",
+          "cosmo",
+          "helios",
+          "helix",
+          "iris",
+          "kepler",
+          "lumen",
+          "luna",
+          "lux",
+          "naksh",
+          "orion",
+          "perseus",
+          "rigel",
+          "sirius",
+          "ursa",
+          "zagan",
+          "zenith"
+        ]
+      }
+    ]
+  },
+  "stt": {
+    "providers": [
+      {
+        "id": "deepgram",
+        "label": "Deepgram",
+        "byok_secret": "deepgram_secret_id",
+        "default_model": "nova-3",
+        "models": [
+          "nova-3",
+          "nova-3-general"
+        ],
+        "pricing": {
+          "type": "stt",
+          "units": [
+            "per_minute_streaming"
+          ]
+        }
+      },
+      {
+        "id": "elevenlabs",
+        "label": "ElevenLabs Scribe",
+        "byok_secret": "elevenlabs_secret_id",
+        "default_model": "scribe_v2_realtime",
+        "models": [
+          "scribe_v2_realtime"
+        ],
+        "pricing": {
+          "type": "stt",
+          "units": [
+            "per_hour"
+          ]
+        }
+      },
+      {
+        "id": "gladia",
+        "label": "Gladia",
+        "byok_secret": "gladia_secret_id",
+        "default_model": "solaria-1",
+        "models": [
+          "solaria-1"
+        ],
+        "pricing": {
+          "type": "stt",
+          "units": [
+            "per_hour"
+          ]
+        }
+      },
+      {
+        "id": "mistral",
+        "label": "Mistral (Voxtral)",
+        "byok_secret": "mistral_secret_id",
+        "default_model": "voxtral-mini-latest",
+        "models": [
+          "voxtral-mini-latest"
+        ],
+        "pricing": {
+          "type": "stt",
+          "units": [
+            "per_minute"
+          ]
+        }
+      }
+    ],
+    "languages": [
+      "multi",
+      "nl",
+      "en",
+      "de",
+      "fr",
+      "es",
+      "it",
+      "pt",
+      "pl",
+      "ru",
+      "ja",
+      "ko",
+      "zh",
+      "ar",
+      "hi",
+      "da",
+      "sv",
+      "no",
+      "fi",
+      "cs",
+      "hu",
+      "ro",
+      "bg",
+      "hr",
+      "sk",
+      "tr",
+      "id",
+      "vi"
+    ]
+  },
+  "tts": {
+    "aliases": {
+      "11labs": "elevenlabs"
+    },
+    "providers": [
+      {
+        "id": "elevenlabs",
+        "label": "ElevenLabs",
+        "byok_secret": "elevenlabs_secret_id",
+        "default_model": "eleven_flash_v2_5",
+        "models": [
+          "eleven_flash_v2_5",
+          "eleven_v3",
+          "eleven_multilingual_v2",
+          "eleven_turbo_v2_5"
+        ],
+        "pricing": {
+          "type": "tts",
+          "units": [
+            "per_1k_chars"
+          ]
+        },
+        "voice_id": "free"
+      },
+      {
+        "id": "inworld",
+        "label": "Inworld",
+        "byok_secret": "inworld_secret_id",
+        "default_model": "inworld-tts-2",
+        "models": [
+          "inworld-tts-2",
+          "inworld-tts-2-flash",
+          "inworld-tts-1.5-max",
+          "inworld-tts-1.5-mini"
+        ],
+        "legacy_models": [
+          "inworld-tts-1.5-max",
+          "inworld-tts-1.5-mini"
+        ],
+        "pricing": {
+          "type": "tts",
+          "units": [
+            "per_1m_chars"
+          ]
+        },
+        "voice_id": "free"
+      },
+      {
+        "id": "google",
+        "label": "Google (Gemini TTS)",
+        "byok_secret": "google_secret_id",
+        "default_model": "gemini-3.1-flash-tts-preview",
+        "models": [
+          "gemini-3.1-flash-tts-preview",
+          "gemini-2.5-flash-preview-tts",
+          "gemini-2.5-pro-preview-tts"
+        ],
+        "pricing": {
+          "type": "tts",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        },
+        "default_voice": "Kore",
+        "voice_id": "enum",
+        "voices": [
+          "Kore",
+          "Zephyr",
+          "Puck",
+          "Achernar",
+          "Achird",
+          "Algenib",
+          "Algieba",
+          "Alnilam",
+          "Aoede",
+          "Autonoe",
+          "Callirrhoe",
+          "Charon",
+          "Despina",
+          "Enceladus",
+          "Erinome",
+          "Fenrir",
+          "Gacrux",
+          "Iapetus",
+          "Laomedeia",
+          "Leda",
+          "Orus",
+          "Pulcherrima",
+          "Rasalgethi",
+          "Sadachbia",
+          "Sadaltager",
+          "Schedar",
+          "Sulafat",
+          "Umbriel",
+          "Vindemiatrix",
+          "Zubenelgenubi"
+        ]
+      },
+      {
+        "id": "xai",
+        "label": "xAI (Grok TTS)",
+        "byok_secret": "xai_secret_id",
+        "pricing": {
+          "type": "tts",
+          "units": [
+            "per_1m_chars"
+          ]
+        },
+        "default_voice": "ara",
+        "voice_id": "enum",
+        "voices": [
+          "ara",
+          "eve",
+          "leo",
+          "rex",
+          "sal",
+          "altair",
+          "atlas",
+          "carina",
+          "castor",
+          "celeste",
+          "cosmo",
+          "helios",
+          "helix",
+          "iris",
+          "kepler",
+          "lumen",
+          "luna",
+          "lux",
+          "naksh",
+          "orion",
+          "perseus",
+          "rigel",
+          "sirius",
+          "ursa",
+          "zagan",
+          "zenith"
+        ]
+      }
+    ]
+  },
+  "params": {
+    "llm": {
+      "temperature": {
+        "min": 0,
+        "max": 2,
+        "default": 0.7
+      },
+      "max_completion_tokens": {
+        "min": 1,
+        "max": 32768
+      },
+      "xai_turn_detection": {
+        "threshold": {
+          "min": 0,
+          "max": 1,
+          "default": 0.5
+        },
+        "prefix_padding_ms": {
+          "min": 0,
+          "max": 2000,
+          "default": 300
+        },
+        "silence_duration_ms": {
+          "min": 100,
+          "max": 2000,
+          "default": 200
+        },
+        "idle_timeout_ms": {
+          "min": 0,
+          "max": 30000
+        }
+      },
+      "xai_reasoning_effort": {
+        "enum": [
+          "none",
+          "high"
+        ]
+      },
+      "xai_speed": {
+        "min": 0.7,
+        "max": 1.5,
+        "default": 1
+      },
+      "xai_keyterms": {
+        "max_items": 100,
+        "max_length": 50
+      }
+    },
+    "tts": {
+      "stability": {
+        "min": 0,
+        "max": 1
+      },
+      "similarity_boost": {
+        "min": 0,
+        "max": 1
+      },
+      "style": {
+        "min": 0,
+        "max": 1
+      },
+      "speed": {
+        "min": 0.5,
+        "max": 2
+      }
+    },
+    "stt": {
+      "sample_rate": {
+        "enum": [
+          16000,
+          8000
+        ]
+      }
+    },
+    "speech": {
+      "applies_to": {
+        "turn_taking": "pipeline",
+        "pronunciation": "pipeline",
+        "background_audio": "both",
+        "silence": "both",
+        "end_call_message": "pipeline",
+        "first_message_outbound": "both"
+      },
+      "turn_taking": {
+        "endpointing_min_delay": {
+          "min": 0.1,
+          "max": 5,
+          "default": 0.4
+        },
+        "endpointing_max_delay": {
+          "min": 0.1,
+          "max": 5,
+          "default": 2
+        },
+        "interruption_min_duration": {
+          "min": 0.05,
+          "max": 2,
+          "default": 0.3
+        },
+        "interruption_min_words": {
+          "min": 0,
+          "max": 10,
+          "default": 0
+        },
+        "false_interruption_timeout": {
+          "min": 0.2,
+          "max": 5,
+          "default": 1.5
+        }
+      },
+      "pronunciation": {
+        "max_items": 50,
+        "from": {
+          "min_length": 1,
+          "max_length": 64
+        },
+        "to": {
+          "min_length": 0,
+          "max_length": 128
+        }
+      },
+      "background_audio": {
+        "enabled": {
+          "default": false
+        },
+        "clip": {
+          "enum": [
+            "office",
+            "city",
+            "forest",
+            "crowded_room"
+          ],
+          "default": "office"
+        },
+        "volume": {
+          "min": 0.05,
+          "max": 1,
+          "default": 0.3
+        }
+      },
+      "silence": {
+        "messages": {
+          "max_items": 5,
+          "min_length": 1,
+          "max_length": 300
+        },
+        "final_message": {
+          "max_length": 300
+        },
+        "first_check_seconds": {
+          "min": 1,
+          "max": 60,
+          "default": 3
+        },
+        "interval_seconds": {
+          "min": 3,
+          "max": 120,
+          "default": 12
+        },
+        "max_attempts": {
+          "min": 1,
+          "max": 10,
+          "default": 3
+        }
+      },
+      "end_call_message": {
+        "max_length": 300
+      },
+      "first_message_outbound": {
+        "max_length": 300
+      }
+    }
+  }
+}

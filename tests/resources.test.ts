@@ -22,6 +22,12 @@ beforeEach(() => {
   mock = new MockHttpClient();
 });
 
+// A few tests stub fetch to inspect what really goes over the wire; never leave
+// that stub behind for the next test.
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 // ─── Assistants ──────────────────────────────────────────────────────────────
 
 describe("Assistants", () => {
@@ -200,17 +206,34 @@ describe("Numbers", () => {
     expect(mock.lastRequest.body).toEqual({ workflow_id: "wf1" });
   });
 
-  it("update() detaches a workflow with an explicit null", async () => {
-    // The 409 on workflows.delete() prescribes exactly this call, so the null
-    // has to survive all the way into the body instead of being dropped.
-    mock.onRequest("PATCH", "/numbers/n1", { number: { id: "n1", workflow_id: null } });
+  it("update() detaches a workflow with an explicit null that reaches the wire", async () => {
+    // The 409 on workflows.delete() prescribes exactly this call, so the null has
+    // to survive all the way into the request body: an omitted key means "leave the
+    // workflow attached" and the number keeps taking calls on it. The MockHttpClient
+    // cannot show that - it records the params object it was handed and never
+    // serializes anything - so this one drives the real HttpClient against a stubbed
+    // fetch and reads the body that actually goes out. That is the exact hole the
+    // MCP server fell through.
+    const fetchMock = vi.fn(
+      async (_url: string, _init: RequestInit) =>
+        new Response(JSON.stringify({ number: { id: "n1", workflow_id: null } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
 
-    const numbers = new Numbers(mock as any);
-    const result = await numbers.update("n1", { workflow_id: null });
+    const client = new HMSSovereign({ apiKey: "fl_test_123" });
+    const result = await client.numbers.update("n1", { workflow_id: null });
 
     expect(result.workflow_id).toBeNull();
-    expect(mock.lastRequest.body).toEqual({ workflow_id: null });
-    expect(JSON.stringify(mock.lastRequest.body)).toContain('"workflow_id":null');
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(typeof init.body).toBe("string");
+    expect(JSON.parse(init.body as string)).toEqual({ workflow_id: null });
+    // Belt and braces: an object that stringifies to "{}" would pass a loose
+    // toMatchObject, and a dropped key is invisible in a diff of two objects.
+    expect(init.body).toBe('{"workflow_id":null}');
   });
 });
 

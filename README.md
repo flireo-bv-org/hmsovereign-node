@@ -174,6 +174,84 @@ await client.campaigns.addLead(campaign.id, {
 });
 ```
 
+## Workflows
+
+A workflow is a graph of steps the call moves through: `conversation` nodes talk to
+the caller, `tool` nodes call your webhook in the background, and `transfer` and `end`
+nodes terminate the call. The call starts at `entry_node` and follows an edge when the
+assistant decides the edge's `description` applies.
+
+```typescript
+const workflow = await client.workflows.create({
+  name: 'Dental practice reception',
+  definition: {
+    version: 1,
+    entry_node: 'reception',
+    global_prompt: 'You work for Riverside Dental. Be warm and concise.',
+    nodes: [
+      {
+        id: 'reception',
+        type: 'conversation',
+        instructions: 'You are the receptionist. Hand off when the caller asks about slots.',
+        first_line: 'Good afternoon, Riverside Dental. How can I help you?',
+        tools: [{ type: 'end_call' }],
+      },
+      {
+        id: 'check_availability',
+        type: 'tool',
+        tool_name: 'check_availability',
+        first_line: 'One moment while I look that up for you.',
+      },
+      {
+        id: 'specialist',
+        type: 'conversation',
+        instructions: 'You are Sam. Use the availability result to pick a slot.',
+        llm_config: { provider: 'openai', model: 'gpt-5.4-mini' },
+      },
+      { id: 'goodbye', type: 'end', first_line: 'Thanks for calling. Have a great day!' },
+    ],
+    edges: [
+      { from: 'reception', to: 'check_availability', description: 'The caller asks about free slots.' },
+      { from: 'check_availability', to: 'specialist' },
+      { from: 'specialist', to: 'goodbye', description: 'The caller is done.' },
+    ],
+  },
+});
+
+// Run it on a phone number, instead of a single assistant
+await client.numbers.update(numberId, { workflow_id: workflow.id });
+```
+
+Definitions are validated on write, so a broken graph fails here instead of on the
+first call that reaches the broken step:
+
+```typescript
+try {
+  await client.workflows.create({ name: 'Broken', definition: brokenDefinition });
+} catch (error) {
+  if (error instanceof ApiRequestError && error.status === 400) {
+    console.log(error.message); // "Invalid workflow definition"
+  }
+}
+```
+
+The API answers that 400 with a `details` array naming every problem (`"node 'goodbye'
+is unreachable from entry_node 'reception'"`). `ApiRequestError` does not carry the
+response body yet, so that list is currently only visible in a raw HTTP call.
+
+Deleting a workflow that numbers still run throws a 409. Detach them first — the
+`null` is required, leaving `workflow_id` out means "change nothing":
+
+```typescript
+await client.numbers.update(numberId, { workflow_id: null });
+await client.workflows.delete(workflow.id);
+```
+
+`list()` returns summaries (entry node, node and edge counts); use `get(id)` for the
+full definition. Per-node `llm_config`, `tts_config` and `stt_config` overrides need a
+pipeline assistant on the number — on a realtime (speech-to-speech) assistant they are
+rejected before the call is picked up, so use a node's `voice` there instead.
+
 ## Webhook Verification
 
 Verify webhook signatures in your endpoint:

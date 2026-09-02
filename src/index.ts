@@ -77,6 +77,10 @@ export type {
 
   // LLM
   LLMProvider,
+  TextLLMProvider,
+  RealtimeLLMProvider,
+  GoogleRealtimeVoice,
+  XAIRealtimeVoice,
   LLMMessage,
   LLMConfig,
   ToolDefinition,
@@ -176,6 +180,10 @@ export type {
   WorkflowEndNode,
   WorkflowEdge,
   WorkflowNodeLLMConfig,
+  WorkflowNodeToolDefinition,
+  WorkflowNodeEndCallTool,
+  WorkflowNodeTransferCallTool,
+  WorkflowNodeWebhookTool,
   WorkflowNodeUi,
 
   // Webhooks
