@@ -68,6 +68,7 @@ client.toolTemplates      // Reusable tool/function templates
 client.analysisTemplates  // Post-call analysis schemas
 client.domains            // Custom domain configuration
 client.organizations      // Organization management
+client.workflows          // Multi-step call flows (graph of conversation, tool, transfer and end nodes)
 ```
 
 ## Outbound Calls

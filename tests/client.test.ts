@@ -21,5 +21,6 @@ describe("HMSSovereign", () => {
     expect(client.analysisTemplates).toBeDefined();
     expect(client.domains).toBeDefined();
     expect(client.organizations).toBeDefined();
+    expect(client.workflows).toBeDefined();
   });
 });
