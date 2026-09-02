@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { MockHttpClient } from "./mock-client";
+import { HMSSovereign, ApiRequestError } from "../src/index";
 import { Assistants } from "../src/resources/assistants";
 import { Calls } from "../src/resources/calls";
 import { Numbers } from "../src/resources/numbers";
@@ -12,11 +13,19 @@ import { AnalysisTemplates } from "../src/resources/analysis-templates";
 import { Campaigns } from "../src/resources/campaigns";
 import { Domains } from "../src/resources/domains";
 import { Organizations } from "../src/resources/organizations";
+import { Workflows } from "../src/resources/workflows";
+import type { WorkflowDefinition } from "../src/types";
 
 let mock: MockHttpClient;
 
 beforeEach(() => {
   mock = new MockHttpClient();
+});
+
+// A few tests stub fetch to inspect what really goes over the wire; never leave
+// that stub behind for the next test.
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 // ─── Assistants ──────────────────────────────────────────────────────────────
@@ -185,6 +194,46 @@ describe("Numbers", () => {
     await numbers.create({ phone_number: "+31698765432", agent_id: "a1" });
 
     expect(mock.lastRequest.body).toMatchObject({ phone_number: "+31698765432", agent_id: "a1" });
+  });
+
+  it("update() attaches a workflow", async () => {
+    mock.onRequest("PATCH", "/numbers/n1", { number: { id: "n1", workflow_id: "wf1" } });
+
+    const numbers = new Numbers(mock as any);
+    const result = await numbers.update("n1", { workflow_id: "wf1" });
+
+    expect(result.workflow_id).toBe("wf1");
+    expect(mock.lastRequest.body).toEqual({ workflow_id: "wf1" });
+  });
+
+  it("update() detaches a workflow with an explicit null that reaches the wire", async () => {
+    // The 409 on workflows.delete() prescribes exactly this call, so the null has
+    // to survive all the way into the request body: an omitted key means "leave the
+    // workflow attached" and the number keeps taking calls on it. The MockHttpClient
+    // cannot show that - it records the params object it was handed and never
+    // serializes anything - so this one drives the real HttpClient against a stubbed
+    // fetch and reads the body that actually goes out. That is the exact hole the
+    // MCP server fell through.
+    const fetchMock = vi.fn(
+      async (_url: string, _init: RequestInit) =>
+        new Response(JSON.stringify({ number: { id: "n1", workflow_id: null } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new HMSSovereign({ apiKey: "fl_test_123" });
+    const result = await client.numbers.update("n1", { workflow_id: null });
+
+    expect(result.workflow_id).toBeNull();
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(typeof init.body).toBe("string");
+    expect(JSON.parse(init.body as string)).toEqual({ workflow_id: null });
+    // Belt and braces: an object that stringifies to "{}" would pass a loose
+    // toMatchObject, and a dropped key is invisible in a diff of two objects.
+    expect(init.body).toBe('{"workflow_id":null}');
   });
 });
 
@@ -397,5 +446,117 @@ describe("Organizations", () => {
     await orgs.create({ name: "Child Org" });
 
     expect(mock.lastRequest.body).toEqual({ name: "Child Org" });
+  });
+});
+
+// ─── Workflows ───────────────────────────────────────────────────────────────
+
+const definition: WorkflowDefinition = {
+  version: 1,
+  entry_node: "reception",
+  nodes: [
+    { id: "reception", type: "conversation", instructions: "You are the receptionist." },
+    { id: "goodbye", type: "end", first_line: "Thanks for calling." },
+  ],
+  edges: [{ from: "reception", to: "goodbye", description: "The caller is done." }],
+};
+
+describe("Workflows", () => {
+  it("list() calls GET /workflows and unwraps { workflows }", async () => {
+    mock.onRequest("GET", "/workflows", {
+      workflows: [{ id: "wf1", name: "Reception", is_active: true, entry_node: "reception", node_count: 2, edge_count: 1 }],
+    });
+
+    const workflows = new Workflows(mock as any);
+    const result = await workflows.list();
+
+    expect(result[0].name).toBe("Reception");
+    expect(result[0].node_count).toBe(2);
+    expect(mock.lastRequest).toMatchObject({ method: "GET", path: "/workflows" });
+    // The endpoint takes no limit/offset and returns no pagination envelope,
+    // so the SDK must not invent query parameters for it.
+    expect(mock.lastRequest.query).toBeUndefined();
+  });
+
+  it("get() calls GET /workflows/:id and unwraps { workflow }", async () => {
+    mock.onRequest("GET", "/workflows/wf1", {
+      workflow: { id: "wf1", name: "Reception", is_active: true, definition },
+    });
+
+    const workflows = new Workflows(mock as any);
+    const result = await workflows.get("wf1");
+
+    expect(result.definition.entry_node).toBe("reception");
+    expect(mock.lastRequest).toMatchObject({ method: "GET", path: "/workflows/wf1" });
+  });
+
+  it("create() calls POST /workflows with name and definition", async () => {
+    mock.onRequest("POST", "/workflows", {
+      workflow: { id: "wf2", name: "Reception", is_active: true, definition },
+    });
+
+    const workflows = new Workflows(mock as any);
+    const result = await workflows.create({ name: "Reception", definition });
+
+    expect(result.id).toBe("wf2");
+    expect(mock.lastRequest).toMatchObject({ method: "POST", path: "/workflows" });
+    expect(mock.lastRequest.body).toEqual({ name: "Reception", definition });
+  });
+
+  it("update() calls PATCH /workflows/:id", async () => {
+    mock.onRequest("PATCH", "/workflows/wf1", {
+      workflow: { id: "wf1", name: "Reception", is_active: false, definition },
+    });
+
+    const workflows = new Workflows(mock as any);
+    const result = await workflows.update("wf1", { is_active: false });
+
+    expect(result.is_active).toBe(false);
+    expect(mock.lastRequest).toMatchObject({ method: "PATCH", path: "/workflows/wf1", body: { is_active: false } });
+  });
+
+  it("delete() calls DELETE /workflows/:id", async () => {
+    mock.onRequest("DELETE", "/workflows/wf1", { success: true });
+
+    const workflows = new Workflows(mock as any);
+    await workflows.delete("wf1");
+
+    expect(mock.lastRequest).toMatchObject({ method: "DELETE", path: "/workflows/wf1" });
+  });
+
+  it("narrows a node union on its type", () => {
+    const node = definition.nodes[0];
+    expect(node.type === "conversation" ? node.instructions : null).toBe("You are the receptionist.");
+  });
+});
+
+// Deleting an attached workflow is the one workflow response that is not a
+// happy path, and the mock client cannot produce it: it never throws. So this
+// block drives the real HttpClient against a stubbed fetch.
+describe("Workflows delete conflict", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("delete() throws ApiRequestError with status 409 while numbers are attached", async () => {
+    const message =
+      "Workflow is attached to 2 phone numbers. Detach it first (PATCH /numbers/{id} with workflow_id: null).";
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ error: message }), {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new HMSSovereign({ apiKey: "fl_test_123" });
+
+    const error = await client.workflows.delete("wf1").catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiRequestError);
+    expect((error as ApiRequestError).status).toBe(409);
+    expect((error as ApiRequestError).message).toBe(message);
+    // Not retried: a 409 is the caller's problem, not a transient failure.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

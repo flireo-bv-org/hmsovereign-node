@@ -12,6 +12,7 @@ import { ToolTemplates } from "./resources/tool-templates";
 import { AnalysisTemplates } from "./resources/analysis-templates";
 import { Domains } from "./resources/domains";
 import { Organizations } from "./resources/organizations";
+import { Workflows } from "./resources/workflows";
 
 export class HMSSovereign {
   readonly assistants: Assistants;
@@ -26,6 +27,7 @@ export class HMSSovereign {
   readonly analysisTemplates: AnalysisTemplates;
   readonly domains: Domains;
   readonly organizations: Organizations;
+  readonly workflows: Workflows;
 
   constructor(options: ClientOptions) {
     const client = new HttpClient(options);
@@ -42,6 +44,7 @@ export class HMSSovereign {
     this.analysisTemplates = new AnalysisTemplates(client);
     this.domains = new Domains(client);
     this.organizations = new Organizations(client);
+    this.workflows = new Workflows(client);
   }
 }
 
@@ -74,6 +77,10 @@ export type {
 
   // LLM
   LLMProvider,
+  TextLLMProvider,
+  RealtimeLLMProvider,
+  GoogleRealtimeVoice,
+  XAIRealtimeVoice,
   LLMMessage,
   LLMConfig,
   ToolDefinition,
@@ -158,6 +165,26 @@ export type {
   // Organizations
   Organization,
   OrganizationCreateParams,
+
+  // Workflows
+  Workflow,
+  WorkflowSummary,
+  WorkflowCreateParams,
+  WorkflowUpdateParams,
+  WorkflowDefinition,
+  WorkflowNode,
+  WorkflowNodeType,
+  WorkflowConversationNode,
+  WorkflowToolNode,
+  WorkflowTransferNode,
+  WorkflowEndNode,
+  WorkflowEdge,
+  WorkflowNodeLLMConfig,
+  WorkflowNodeToolDefinition,
+  WorkflowNodeEndCallTool,
+  WorkflowNodeTransferCallTool,
+  WorkflowNodeWebhookTool,
+  WorkflowNodeUi,
 
   // Webhooks
   WebhookCallInfo,
