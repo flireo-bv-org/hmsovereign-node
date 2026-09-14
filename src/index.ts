@@ -164,7 +164,11 @@ export type {
 
   // Organizations
   Organization,
+  OrganizationChild,
   OrganizationCreateParams,
+  OrganizationCreated,
+  OrganizationRetention,
+  OrganizationUpdateParams,
 
   // Workflows
   Workflow,

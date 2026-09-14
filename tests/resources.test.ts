@@ -447,6 +447,26 @@ describe("Organizations", () => {
 
     expect(mock.lastRequest.body).toEqual({ name: "Child Org" });
   });
+
+  it("update() calls PATCH /organizations and sends both periods", async () => {
+    mock.onRequest("PATCH", "/organizations", {
+      content_retention_days: 90,
+      metadata_retention_days: 365,
+    });
+
+    const orgs = new Organizations(mock as any);
+    const result = await orgs.update({
+      content_retention_days: 90,
+      metadata_retention_days: 365,
+    });
+
+    // Beide termijnen gaan altijd mee: de API valideert ze tegen elkaar.
+    expect(mock.lastRequest.body).toEqual({
+      content_retention_days: 90,
+      metadata_retention_days: 365,
+    });
+    expect(result.metadata_retention_days).toBe(365);
+  });
 });
 
 // ─── Workflows ───────────────────────────────────────────────────────────────

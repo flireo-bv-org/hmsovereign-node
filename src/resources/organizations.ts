@@ -1,5 +1,11 @@
 import type { HttpClient } from "../client";
-import type { Organization, OrganizationCreateParams } from "../types";
+import type {
+  Organization,
+  OrganizationCreateParams,
+  OrganizationCreated,
+  OrganizationRetention,
+  OrganizationUpdateParams,
+} from "../types";
 
 export class Organizations {
   constructor(private readonly client: HttpClient) {}
@@ -12,10 +18,31 @@ export class Organizations {
     });
   }
 
-  /** Create a new child organization (whitelabel) */
-  async create(params: OrganizationCreateParams): Promise<Organization> {
+  /**
+   * Create a new child organization (whitelabel).
+   *
+   * The response carries the new organization's API key. It is returned once,
+   * here, and cannot be retrieved afterwards.
+   */
+  async create(params: OrganizationCreateParams): Promise<OrganizationCreated> {
     return this.client.request({
       method: "POST",
+      path: "/organizations",
+      body: params,
+    });
+  }
+
+  /**
+   * Set how long your organization's calls are kept.
+   *
+   * Both periods are required: they are validated against each other, and
+   * content can never be kept longer than metadata. Shortening a period
+   * destroys data — the nightly cleanup erases everything past it, and that
+   * cannot be undone.
+   */
+  async update(params: OrganizationUpdateParams): Promise<OrganizationRetention> {
+    return this.client.request({
+      method: "PATCH",
       path: "/organizations",
       body: params,
     });
