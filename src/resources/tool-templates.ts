@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type { ToolTemplate, ToolTemplateCreateParams, ToolTemplateUpdateParams } from "../types";
 
 export class ToolTemplates {
@@ -17,7 +18,7 @@ export class ToolTemplates {
   async get(id: string): Promise<ToolTemplate> {
     const res = await this.client.request<{ tool_template: ToolTemplate }>({
       method: "GET",
-      path: `/tool-templates/${id}`,
+      path: `/tool-templates/${encodePathParam(id)}`,
     });
     return res.tool_template;
   }
@@ -32,11 +33,11 @@ export class ToolTemplates {
     return res.tool_template;
   }
 
-  /** Update a tool template */
+  /** Update a tool template. Assistants that use the template pick up the change. */
   async update(id: string, params: ToolTemplateUpdateParams): Promise<ToolTemplate> {
     const res = await this.client.request<{ tool_template: ToolTemplate }>({
       method: "PATCH",
-      path: `/tool-templates/${id}`,
+      path: `/tool-templates/${encodePathParam(id)}`,
       body: params,
     });
     return res.tool_template;
@@ -46,7 +47,7 @@ export class ToolTemplates {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/tool-templates/${id}`,
+      path: `/tool-templates/${encodePathParam(id)}`,
     });
   }
 }

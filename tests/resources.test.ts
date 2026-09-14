@@ -14,7 +14,7 @@ import { Campaigns } from "../src/resources/campaigns";
 import { Domains } from "../src/resources/domains";
 import { Organizations } from "../src/resources/organizations";
 import { Workflows } from "../src/resources/workflows";
-import type { WorkflowDefinition } from "../src/types";
+import type { ToolTemplateCreateParams, WorkflowDefinition } from "../src/types";
 
 let mock: MockHttpClient;
 
@@ -258,13 +258,26 @@ describe("SipTrunks", () => {
     expect(result.id).toBe("t1");
   });
 
-  it("create() unwraps { trunk }", async () => {
-    mock.onRequest("POST", "/sip-trunks", { trunk: { id: "t2", name: "Twilio" } });
+  it("create() sends name, provider and address, and unwraps { trunk }", async () => {
+    const params = {
+      name: "Carrier",
+      provider: "carrier",
+      address: "sip.example.com",
+      auth_username: "user",
+      auth_password: "pass",
+      transport: "tls" as const,
+    };
+    mock.onRequest("POST", "/sip-trunks", {
+      trunk: { id: "t2", name: "Carrier", provider: "carrier", address: "sip.example.com", transport: "tls", is_active: true },
+    });
 
     const trunks = new SipTrunks(mock as any);
-    const result = await trunks.create({ name: "Twilio" });
+    const result = await trunks.create(params);
 
-    expect(result.name).toBe("Twilio");
+    expect(mock.lastRequest).toMatchObject({ method: "POST", path: "/sip-trunks" });
+    expect(mock.lastRequest.body).toEqual(params);
+    expect(result.address).toBe("sip.example.com");
+    expect(result.is_active).toBe(true);
   });
 });
 
@@ -293,7 +306,17 @@ describe("Voices", () => {
 describe("Usage", () => {
   it("list() returns { logs, pagination, summary }", async () => {
     const response = {
-      logs: [{ id: "u1", duration_sec: 120 }],
+      logs: [
+        {
+          id: "u1",
+          duration_sec: 120,
+          call_type: "web",
+          phone_number: null,
+          agent_name: null,
+          business_name: null,
+          created_at: "2026-01-01T00:00:00Z",
+        },
+      ],
       pagination: { total: 1, limit: 100, offset: 0 },
       summary: { total_calls: 1, total_duration_seconds: 120, total_duration_minutes: 2 },
     };
@@ -305,6 +328,7 @@ describe("Usage", () => {
     expect(result.logs).toHaveLength(1);
     expect(result.summary.total_calls).toBe(1);
     expect(result.pagination.total).toBe(1);
+    expect(result.logs[0].call_type).toBe("web");
   });
 });
 
@@ -341,6 +365,22 @@ describe("BYOK", () => {
 
     expect(mock.lastRequest.body).toEqual({ provider: "deepgram" });
   });
+
+  it("saveConfig() calls POST /byok/config with provider and config", async () => {
+    mock.onRequest("POST", "/byok/config", { byok_config: { deepgram: { some_setting: "value" } } });
+
+    const byok = new BYOK(mock as any);
+    const result = await byok.saveConfig({ provider: "deepgram", config: { some_setting: "value" } });
+
+    expect(mock.lastRequest).toMatchObject({ method: "POST", path: "/byok/config" });
+    expect(mock.lastRequest.body).toEqual({ provider: "deepgram", config: { some_setting: "value" } });
+    expect(result.byok_config.deepgram).toEqual({ some_setting: "value" });
+  });
+
+  it("has no getConfig(): settings are written, not read back, through /byok/config", () => {
+    const byok = new BYOK(mock as any);
+    expect("getConfig" in byok).toBe(false);
+  });
 });
 
 // ─── Tool Templates ──────────────────────────────────────────────────────────
@@ -363,6 +403,42 @@ describe("ToolTemplates", () => {
 
     expect(result.id).toBe("tt1");
   });
+
+  it("create() sends tool_type and tool_config", async () => {
+    const params: ToolTemplateCreateParams = {
+      name: "Customer lookup",
+      tool_type: "function",
+      tool_config: {
+        name: "lookup_customer",
+        description: "Look up a customer by phone number",
+        parameters: { type: "object", properties: { phone: { type: "string" } }, required: ["phone"] },
+      },
+    };
+    mock.onRequest("POST", "/tool-templates", { tool_template: { id: "tt2", ...params } });
+
+    const templates = new ToolTemplates(mock as any);
+    const result = await templates.create(params);
+
+    expect(mock.lastRequest).toMatchObject({ method: "POST", path: "/tool-templates" });
+    expect(mock.lastRequest.body).toEqual(params);
+    expect(result.tool_type).toBe("function");
+  });
+
+  it("update() calls PATCH /tool-templates/:id with the new tool_config", async () => {
+    const tool_config = {
+      destinations: [{ type: "number" as const, number: "+31201234567", description: "Sales" }],
+    };
+    mock.onRequest("PATCH", "/tool-templates/tt1", {
+      tool_template: { id: "tt1", name: "Transfer", tool_type: "transfer_call", tool_config },
+    });
+
+    const templates = new ToolTemplates(mock as any);
+    const result = await templates.update("tt1", { tool_type: "transfer_call", tool_config });
+
+    expect(mock.lastRequest).toMatchObject({ method: "PATCH", path: "/tool-templates/tt1" });
+    expect(mock.lastRequest.body).toEqual({ tool_type: "transfer_call", tool_config });
+    expect(result.tool_type === "transfer_call" ? result.tool_config.destinations : []).toHaveLength(1);
+  });
 });
 
 // ─── Analysis Templates ─────────────────────────────────────────────────────
@@ -378,9 +454,48 @@ describe("AnalysisTemplates", () => {
 
     expect(result[0].name).toBe("Sentiment");
   });
+
+  it("create() sends system_prompt, user_prompt and schema", async () => {
+    const params = {
+      name: "Sentiment",
+      system_prompt: "You analyse phone calls.",
+      user_prompt: "Rate the sentiment of this call: {transcript}",
+      schema: { type: "object", properties: { sentiment: { type: "number" } } },
+    };
+    mock.onRequest("POST", "/analysis-templates", { analysis_template: { id: "at2", ...params } });
+
+    const templates = new AnalysisTemplates(mock as any);
+    const result = await templates.create(params);
+
+    expect(mock.lastRequest).toMatchObject({ method: "POST", path: "/analysis-templates" });
+    expect(mock.lastRequest.body).toEqual(params);
+    expect(result.user_prompt).toBe(params.user_prompt);
+  });
+
+  it("update() calls PATCH /analysis-templates/:id", async () => {
+    mock.onRequest("PATCH", "/analysis-templates/at1", {
+      analysis_template: { id: "at1", system_prompt: "Be brief." },
+    });
+
+    const templates = new AnalysisTemplates(mock as any);
+    const result = await templates.update("at1", { system_prompt: "Be brief." });
+
+    expect(mock.lastRequest).toMatchObject({
+      method: "PATCH",
+      path: "/analysis-templates/at1",
+      body: { system_prompt: "Be brief." },
+    });
+    expect(result.system_prompt).toBe("Be brief.");
+  });
 });
 
 // ─── Campaigns ───────────────────────────────────────────────────────────────
+
+const schedule = {
+  schedule_start_time: "09:00:00",
+  schedule_end_time: "17:00:00",
+  timezone: "Europe/Amsterdam",
+};
 
 describe("Campaigns", () => {
   it("list() unwraps { campaigns }", async () => {
@@ -392,13 +507,50 @@ describe("Campaigns", () => {
     expect(result[0].name).toBe("Reminders");
   });
 
-  it("create() sends agent_id in body", async () => {
-    mock.onRequest("POST", "/campaigns", { campaign: { id: "cp2", name: "Survey" } });
+  it("create() sends agent_id and the schedule", async () => {
+    mock.onRequest("POST", "/campaigns", { campaign: { id: "cp2", name: "Survey", status: "draft" } });
 
     const campaigns = new Campaigns(mock as any);
-    await campaigns.create({ name: "Survey", agent_id: "a1" });
+    await campaigns.create({ name: "Survey", agent_id: "a1", ...schedule });
 
-    expect(mock.lastRequest.body).toMatchObject({ name: "Survey", agent_id: "a1" });
+    expect(mock.lastRequest.body).toEqual({ name: "Survey", agent_id: "a1", ...schedule });
+  });
+
+  it("update() sends a status change", async () => {
+    mock.onRequest("PATCH", "/campaigns/cp1", { campaign: { id: "cp1", status: "cancelled" } });
+
+    const campaigns = new Campaigns(mock as any);
+    const result = await campaigns.update("cp1", { status: "cancelled" });
+
+    expect(mock.lastRequest).toMatchObject({ method: "PATCH", path: "/campaigns/cp1", body: { status: "cancelled" } });
+    expect(result.status).toBe("cancelled");
+  });
+
+  it("listLeads() unwraps { leads } and sends no pagination parameters", async () => {
+    mock.onRequest("GET", "/campaigns/cp1/leads", {
+      leads: [
+        {
+          id: "l1",
+          campaign_id: "cp1",
+          phone_number: "+31612345678",
+          variables: {},
+          status: "skipped",
+          call_id: null,
+          attempts: 1,
+          last_attempt_at: "2026-01-01T10:00:00Z",
+          created_at: "2026-01-01T09:00:00Z",
+        },
+      ],
+    });
+
+    const campaigns = new Campaigns(mock as any);
+    const result = await campaigns.listLeads("cp1");
+
+    expect(result).toHaveLength(1);
+    expect(result[0].status).toBe("skipped");
+    expect(result[0].attempts).toBe(1);
+    expect(mock.lastRequest).toMatchObject({ method: "GET", path: "/campaigns/cp1/leads" });
+    expect(mock.lastRequest.query).toBeUndefined();
   });
 
   it("addLead() calls POST /campaigns/:id/leads", async () => {
@@ -407,23 +559,91 @@ describe("Campaigns", () => {
     });
 
     const campaigns = new Campaigns(mock as any);
-    const result = await campaigns.addLead("cp1", { phone_number: "+31612345678" });
+    const result = await campaigns.addLead("cp1", {
+      phone_number: "+31612345678",
+      variables: { name: "Jane" },
+    });
 
     expect(result.phone_number).toBe("+31612345678");
     expect(mock.lastRequest.path).toBe("/campaigns/cp1/leads");
+    expect(mock.lastRequest.body).toEqual({ phone_number: "+31612345678", variables: { name: "Jane" } });
   });
 });
 
 // ─── Domains ─────────────────────────────────────────────────────────────────
 
+const domain = {
+  id: "d1",
+  org_id: "o1",
+  domain_name: "mail.example.com",
+  resend_domain_id: "rd1",
+  status: "pending",
+  region: "eu-west-1",
+  records: [{ record: "SPF", name: "send", type: "MX", ttl: "Auto", status: "pending", value: "feedback-smtp.example.com", priority: 10 }],
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-01T00:00:00Z",
+  verified_at: null,
+};
+
 describe("Domains", () => {
-  it("get() calls GET /domains", async () => {
-    mock.onRequest("GET", "/domains", { id: "d1", domain: "acme.com", verified: true });
+  it("get() calls GET /domains and unwraps { domain }", async () => {
+    mock.onRequest("GET", "/domains", { domain });
 
     const domains = new Domains(mock as any);
     const result = await domains.get();
 
-    expect(result.domain).toBe("acme.com");
+    expect(result?.domain_name).toBe("mail.example.com");
+  });
+
+  it("get() returns null when no domain is configured", async () => {
+    mock.onRequest("GET", "/domains", { domain: null });
+
+    const domains = new Domains(mock as any);
+
+    expect(await domains.get()).toBeNull();
+  });
+
+  it("create() sends domain_name and unwraps { domain }", async () => {
+    mock.onRequest("POST", "/domains", { domain });
+
+    const domains = new Domains(mock as any);
+    const result = await domains.create({ domain_name: "mail.example.com" });
+
+    expect(mock.lastRequest.body).toEqual({ domain_name: "mail.example.com" });
+    expect(result.records?.[0].type).toBe("MX");
+  });
+
+  it("listResendDomains() returns the domains and the selected id", async () => {
+    mock.onRequest("GET", "/domains/sync", {
+      domains: [{ id: "rd1", name: "mail.example.com", status: "verified", region: "eu-west-1" }],
+      selected_domain_id: "rd1",
+    });
+
+    const domains = new Domains(mock as any);
+    const result = await domains.listResendDomains();
+
+    expect(result.domains[0].name).toBe("mail.example.com");
+    expect(result.selected_domain_id).toBe("rd1");
+  });
+
+  it("syncResendDomain() sends resendDomainId and unwraps { domain }", async () => {
+    mock.onRequest("POST", "/domains/sync", { domain, message: "Domain synced successfully from Resend" });
+
+    const domains = new Domains(mock as any);
+    const result = await domains.syncResendDomain({ resendDomainId: "rd1" });
+
+    expect(mock.lastRequest.body).toEqual({ resendDomainId: "rd1" });
+    expect(result.id).toBe("d1");
+  });
+
+  it("verify() and refresh() unwrap { domain }", async () => {
+    mock.onRequest("POST", "/domains/verify", { domain: { ...domain, status: "verified" } });
+    mock.onRequest("POST", "/domains/refresh", { domain });
+
+    const domains = new Domains(mock as any);
+
+    expect((await domains.verify()).status).toBe("verified");
+    expect((await domains.refresh()).status).toBe("pending");
   });
 });
 
@@ -437,6 +657,22 @@ describe("Organizations", () => {
     const result = await orgs.get();
 
     expect(result.name).toBe("Acme");
+    expect(mock.lastRequest.query).toBeUndefined();
+  });
+
+  it("get() asks for child organizations with include_children", async () => {
+    mock.onRequest("GET", "/organizations", {
+      id: "o1",
+      name: "Acme",
+      children: [{ id: "o2", name: "Acme Child", created_at: "2026-01-01T00:00:00Z" }],
+    });
+
+    const orgs = new Organizations(mock as any);
+    const result = await orgs.get({ include_children: true });
+
+    expect(mock.lastRequest).toMatchObject({ method: "GET", path: "/organizations" });
+    expect(mock.lastRequest.query).toEqual({ include_children: true });
+    expect(result.children?.[0].name).toBe("Acme Child");
   });
 
   it("create() calls POST /organizations", async () => {

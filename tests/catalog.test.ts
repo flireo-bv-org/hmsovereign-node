@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import {
   GOOGLE_REALTIME_VOICES,
   LLM_PROVIDERS,
+  OPENAI_LIVE_VOICES,
   REALTIME_LLM_PROVIDERS,
   STT_PROVIDERS,
   TEXT_LLM_PROVIDERS,
@@ -15,13 +16,12 @@ import {
 // and rejects anything else. This suite compares the SDK's unions against a vendored
 // copy of that catalog, so a provider the platform knows and the SDK does not turns
 // red here instead of surfacing as "that provider does not typecheck" in a user's
-// editor. It caught the TTS union standing at two providers (elevenlabs, inworld)
-// while the catalog had four, and google_realtime missing from the LLM union.
+// editor.
 //
-// The fixture is a verbatim copy of catalog/config-catalog.json in the api-spec repo
-// (which is generated from catalog/config-catalog.yaml, the source of truth). Refresh
-// it by copying that file over this one; the assertion on `version` below is the
-// reminder that a contract bump has to be looked at rather than copied blind.
+// The fixture is a copy of the platform's config catalog with its generator metadata
+// (the `_meta` key) left out. Refresh it by replacing the file with a newer copy,
+// again without `_meta`; the assertion on `version` below is the reminder that a
+// contract bump has to be looked at rather than copied blind.
 
 const catalogPath = fileURLToPath(new URL("./fixtures/config-catalog.json", import.meta.url));
 
@@ -75,5 +75,13 @@ describe("config catalog", () => {
   it("knows no realtime voice the SDK cannot express", () => {
     expect(voicesOf("google_realtime")).toEqual(sorted(GOOGLE_REALTIME_VOICES));
     expect(voicesOf("xai_realtime")).toEqual(sorted(XAI_REALTIME_VOICES));
+    expect(voicesOf("openai_live")).toEqual(sorted(OPENAI_LIVE_VOICES));
+  });
+
+  it("has a realtime voice list for every realtime provider", () => {
+    // A realtime provider without a voice union in the SDK would make its voices
+    // unexpressible in llm_config.voice.
+    const withVoices = catalog.llm.providers.filter((p) => p.kind === "realtime" && p.voices).map((p) => p.id);
+    expect(sorted(withVoices)).toEqual(sorted(REALTIME_LLM_PROVIDERS));
   });
 });

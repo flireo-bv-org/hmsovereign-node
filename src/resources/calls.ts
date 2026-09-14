@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type {
   Call,
   CallListParams,
@@ -48,7 +49,7 @@ export class Calls {
   async get(id: string): Promise<Call> {
     return this.client.request({
       method: "GET",
-      path: `/calls/${id}`,
+      path: `/calls/${encodePathParam(id)}`,
     });
   }
 
@@ -65,7 +66,7 @@ export class Calls {
   async control(id: string, command: CallControlCommand): Promise<CallControlResponse> {
     return this.client.request({
       method: "POST",
-      path: `/calls/${id}/control`,
+      path: `/calls/${encodePathParam(id)}/control`,
       body: command,
     });
   }

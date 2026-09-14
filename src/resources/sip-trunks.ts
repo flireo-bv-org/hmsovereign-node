@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type { SipTrunk, SipTrunkCreateParams } from "../types";
 
 export class SipTrunks {
@@ -17,7 +18,7 @@ export class SipTrunks {
   async get(id: string): Promise<SipTrunk> {
     const res = await this.client.request<{ trunk: SipTrunk }>({
       method: "GET",
-      path: `/sip-trunks/${id}`,
+      path: `/sip-trunks/${encodePathParam(id)}`,
     });
     return res.trunk;
   }
@@ -36,7 +37,7 @@ export class SipTrunks {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/sip-trunks/${id}`,
+      path: `/sip-trunks/${encodePathParam(id)}`,
     });
   }
 }

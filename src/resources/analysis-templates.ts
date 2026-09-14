@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type {
   AnalysisTemplate,
   AnalysisTemplateCreateParams,
@@ -21,7 +22,7 @@ export class AnalysisTemplates {
   async get(id: string): Promise<AnalysisTemplate> {
     const res = await this.client.request<{ analysis_template: AnalysisTemplate }>({
       method: "GET",
-      path: `/analysis-templates/${id}`,
+      path: `/analysis-templates/${encodePathParam(id)}`,
     });
     return res.analysis_template;
   }
@@ -40,7 +41,7 @@ export class AnalysisTemplates {
   async update(id: string, params: AnalysisTemplateUpdateParams): Promise<AnalysisTemplate> {
     const res = await this.client.request<{ analysis_template: AnalysisTemplate }>({
       method: "PATCH",
-      path: `/analysis-templates/${id}`,
+      path: `/analysis-templates/${encodePathParam(id)}`,
       body: params,
     });
     return res.analysis_template;
@@ -50,7 +51,7 @@ export class AnalysisTemplates {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/analysis-templates/${id}`,
+      path: `/analysis-templates/${encodePathParam(id)}`,
     });
   }
 }

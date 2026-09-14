@@ -7,6 +7,10 @@ describe("HMSSovereign", () => {
     expect(() => new HMSSovereign({ apiKey: "" })).toThrow(AuthenticationError);
   });
 
+  it("points to the dashboard when the API key is missing", () => {
+    expect(() => new HMSSovereign({ apiKey: "" })).toThrow("https://dashboard.voicedock.ai");
+  });
+
   it("creates client with valid API key", () => {
     const client = new HMSSovereign({ apiKey: "fl_test_123" });
 

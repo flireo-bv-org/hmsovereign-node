@@ -1,11 +1,11 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type {
   Campaign,
   CampaignCreateParams,
   CampaignUpdateParams,
   CampaignLead,
   CampaignLeadCreateParams,
-  Pagination,
 } from "../types";
 
 export class Campaigns {
@@ -24,12 +24,12 @@ export class Campaigns {
   async get(id: string): Promise<Campaign> {
     const res = await this.client.request<{ campaign: Campaign }>({
       method: "GET",
-      path: `/campaigns/${id}`,
+      path: `/campaigns/${encodePathParam(id)}`,
     });
     return res.campaign;
   }
 
-  /** Create a campaign */
+  /** Create a campaign. It starts as a draft; set its status to `scheduled` to start calling. */
   async create(params: CampaignCreateParams): Promise<Campaign> {
     const res = await this.client.request<{ campaign: Campaign }>({
       method: "POST",
@@ -43,7 +43,7 @@ export class Campaigns {
   async update(id: string, params: CampaignUpdateParams): Promise<Campaign> {
     const res = await this.client.request<{ campaign: Campaign }>({
       method: "PATCH",
-      path: `/campaigns/${id}`,
+      path: `/campaigns/${encodePathParam(id)}`,
       body: params,
     });
     return res.campaign;
@@ -53,37 +53,34 @@ export class Campaigns {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/campaigns/${id}`,
+      path: `/campaigns/${encodePathParam(id)}`,
     });
   }
 
-  /** List leads for a campaign */
-  async listLeads(
-    campaignId: string,
-    params?: { limit?: number; offset?: number }
-  ): Promise<{ leads: CampaignLead[]; pagination: Pagination }> {
-    return this.client.request({
+  /** List all leads of a campaign, oldest first */
+  async listLeads(campaignId: string): Promise<CampaignLead[]> {
+    const res = await this.client.request<{ leads: CampaignLead[] }>({
       method: "GET",
-      path: `/campaigns/${campaignId}/leads`,
-      query: params as Record<string, string | number | boolean | undefined>,
+      path: `/campaigns/${encodePathParam(campaignId)}/leads`,
     });
+    return res.leads;
   }
 
   /** Add a lead to a campaign */
   async addLead(campaignId: string, params: CampaignLeadCreateParams): Promise<CampaignLead> {
     const res = await this.client.request<{ lead: CampaignLead }>({
       method: "POST",
-      path: `/campaigns/${campaignId}/leads`,
+      path: `/campaigns/${encodePathParam(campaignId)}/leads`,
       body: params,
     });
     return res.lead;
   }
 
-  /** Remove a lead from a campaign */
+  /** Remove a lead from a campaign. A lead that is being called cannot be removed. */
   async removeLead(campaignId: string, leadId: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/campaigns/${campaignId}/leads/${leadId}`,
+      path: `/campaigns/${encodePathParam(campaignId)}/leads/${encodePathParam(leadId)}`,
     });
   }
 }
