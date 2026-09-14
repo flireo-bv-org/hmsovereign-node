@@ -693,7 +693,18 @@ export interface WorkflowUpdateParams {
 
 // --- Calls ---
 
-export type CallStatus = "connecting" | "in-progress" | "ended" | "failed";
+/** Known call statuses. The API can return other values, which the type accepts as a plain string. */
+export type CallStatus =
+  | "connecting"
+  | "ringing"
+  | "in-progress"
+  | "ended"
+  | "ended-with-error"
+  | "transferred"
+  | "failed"
+  | "rejected"
+  | "insufficient-credits"
+  | (string & {});
 
 export interface CallMessage {
   role: "system" | "user" | "assistant";

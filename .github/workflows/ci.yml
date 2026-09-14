@@ -27,6 +27,9 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Check README examples
+        run: npm run check:readme
+
       - name: Run tests
         run: npm test
 
