@@ -44,6 +44,7 @@ All notable changes to this package are documented in this file. The format is b
 - When the API returns both `error` and `message`, the error message contains both.
 - Debug output masks the values of keys that look like secrets.
 - The error for a missing API key links to https://dashboard.voicedock.ai.
+- `CallStatus` includes `ringing`, `ended-with-error`, `transferred`, `rejected` and `insufficient-credits`, and accepts other values the API returns.
 
 ### Removed
 
