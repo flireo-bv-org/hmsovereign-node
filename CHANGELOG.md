@@ -17,6 +17,8 @@ All notable changes to this package are documented in this file. The format is b
 - `Organization` matches the response of `GET /organizations`.
 - `organizations.create()` returns `OrganizationCreated`, which includes the API key issued for the new organization.
 - `OrganizationCreateParams` drops `email` and adds `parent_org_id`.
+- The package exports separate type definitions for `import` and `require`, so ESM projects resolve the ESM types.
+- The `User-Agent` header reports the installed package version.
 
 ## [1.0.1] - 2026-03-24
 
