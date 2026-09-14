@@ -1,5 +1,5 @@
 import type { HttpClient } from "../client";
-import type { BYOKKeys, BYOKSetParams, BYOKDeleteParams } from "../types";
+import type { BYOKConfig, BYOKConfigParams, BYOKDeleteParams, BYOKKeys, BYOKSetParams } from "../types";
 
 export class BYOK {
   constructor(private readonly client: HttpClient) {}
@@ -12,19 +12,24 @@ export class BYOK {
     });
   }
 
-  /** Get detailed provider configurations */
-  async getConfig(): Promise<Record<string, unknown>> {
-    return this.client.request({
-      method: "GET",
-      path: "/byok/config",
-    });
-  }
-
   /** Add or update a BYOK provider API key */
   async set(params: BYOKSetParams): Promise<{ success: boolean; byok_keys: BYOKKeys }> {
     return this.client.request({
       method: "POST",
       path: "/byok",
+      body: params,
+    });
+  }
+
+  /**
+   * Save provider-specific settings. A key for the provider must already be
+   * stored with `set()`. The settings are merged into the ones already stored
+   * for that provider, and the result holds the settings of every provider.
+   */
+  async saveConfig(params: BYOKConfigParams): Promise<{ byok_config: BYOKConfig }> {
+    return this.client.request({
+      method: "POST",
+      path: "/byok/config",
       body: params,
     });
   }

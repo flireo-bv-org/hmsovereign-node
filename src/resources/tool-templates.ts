@@ -32,7 +32,7 @@ export class ToolTemplates {
     return res.tool_template;
   }
 
-  /** Update a tool template */
+  /** Update a tool template. Assistants that use the template pick up the change. */
   async update(id: string, params: ToolTemplateUpdateParams): Promise<ToolTemplate> {
     const res = await this.client.request<{ tool_template: ToolTemplate }>({
       method: "PATCH",

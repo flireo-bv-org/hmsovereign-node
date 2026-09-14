@@ -123,6 +123,7 @@ export type {
   // SIP Trunks
   SipTrunk,
   SipTrunkCreateParams,
+  SipTrunkTransport,
 
   // Voices
   Voice,
@@ -138,11 +139,18 @@ export type {
   BYOKKeys,
   BYOKSetParams,
   BYOKDeleteParams,
+  BYOKConfig,
+  BYOKConfigParams,
 
   // Tool Templates
   ToolTemplate,
+  ToolTemplateType,
   ToolTemplateCreateParams,
   ToolTemplateUpdateParams,
+  FunctionToolTemplateConfig,
+  EndCallToolTemplateConfig,
+  TransferCallToolTemplateConfig,
+  TransferDestination,
 
   // Analysis Templates
   AnalysisTemplate,
@@ -151,6 +159,7 @@ export type {
 
   // Campaigns
   CampaignStatus,
+  CampaignUpdateStatus,
   LeadStatus,
   Campaign,
   CampaignCreateParams,
@@ -161,6 +170,10 @@ export type {
   // Domains
   Domain,
   DomainCreateParams,
+  DomainRecord,
+  ResendDomain,
+  ResendDomainList,
+  ResendDomainSyncParams,
 
   // Organizations
   Organization,

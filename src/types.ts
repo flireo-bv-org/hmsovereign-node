@@ -356,18 +356,21 @@ export interface WorkflowNodeEndCallTool {
   type: "end_call" | "endCall";
 }
 
+/** A destination a call can be transferred to. */
+export interface TransferDestination {
+  type: "number";
+  /** E.164, e.g. "+31612345678" */
+  number: string;
+  /** Shown to the model so it knows when to pick this destination */
+  description: string;
+  /** Spoken to the caller before transferring */
+  message?: string;
+}
+
 /** Built-in tool: hands the caller over to one of the listed destinations. */
 export interface WorkflowNodeTransferCallTool {
   type: "transfer_call" | "transferCall";
-  destinations: Array<{
-    type: "number";
-    /** E.164, e.g. "+31612345678" */
-    number: string;
-    /** Shown to the model so it knows when to pick this destination */
-    description: string;
-    /** Spoken to the caller before transferring */
-    message?: string;
-  }>;
+  destinations: TransferDestination[];
 }
 
 /**
@@ -692,26 +695,34 @@ export interface CallControlResponse {
 
 // --- SIP Trunks ---
 
+export type SipTrunkTransport = "udp" | "tcp" | "tls";
+
 export interface SipTrunk {
   id: string;
+  org_id: string;
   name: string;
-  provider?: string;
-  inbound_addresses?: string[];
-  outbound_address?: string;
-  outbound_number?: string;
-  auth_username?: string;
+  /** SIP provider name */
+  provider: string | null;
+  /** SIP server address */
+  address: string;
+  transport: SipTrunkTransport | null;
+  auth_username: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface SipTrunkCreateParams {
   name: string;
-  provider?: string;
-  inbound_addresses?: string[];
-  outbound_address?: string;
-  outbound_number?: string;
+  /** SIP provider name */
+  provider: string;
+  /** SIP server address, e.g. "sip.example.com" */
+  address: string;
   auth_username?: string;
+  /** Stored encrypted and never returned by the API */
   auth_password?: string;
+  /** Defaults to "udp" */
+  transport?: SipTrunkTransport;
 }
 
 // --- Voices ---
@@ -758,17 +769,30 @@ export interface UsageListParams {
 
 // --- BYOK ---
 
-export type BYOKProvider = "deepgram" | "openai" | "elevenlabs" | "resend" | "xai" | "gladia" | "mistral";
+export type BYOKProvider =
+  | "deepgram"
+  | "openai"
+  | "elevenlabs"
+  | "inworld"
+  | "resend"
+  | "xai"
+  | "gladia"
+  | "mistral"
+  | "google"
+  | "google_vertex";
 
 /** BYOK keys as stored — vault secret IDs per provider */
 export interface BYOKKeys {
   deepgram_secret_id?: string | null;
   openai_secret_id?: string | null;
   elevenlabs_secret_id?: string | null;
+  inworld_secret_id?: string | null;
   resend_secret_id?: string | null;
   xai_secret_id?: string | null;
   gladia_secret_id?: string | null;
   mistral_secret_id?: string | null;
+  google_secret_id?: string | null;
+  google_vertex_secret_id?: string | null;
 }
 
 export interface BYOKSetParams {
@@ -780,44 +804,92 @@ export interface BYOKDeleteParams {
   provider: BYOKProvider;
 }
 
+/** Provider-specific BYOK settings of your organization, keyed by provider. */
+export type BYOKConfig = Record<string, Record<string, unknown>>;
+
+export interface BYOKConfigParams {
+  /** A key for this provider must already be stored with `byok.set()`. */
+  provider: BYOKProvider;
+  /** Provider-specific settings, merged into the settings already stored for this provider. */
+  config: Record<string, unknown>;
+}
+
 // --- Tool Templates ---
 
-export interface ToolTemplate {
-  id: string;
-  name: string;
+export type ToolTemplateType = "function" | "end_call" | "transfer_call";
+
+/** `tool_config` of a `function` template: a webhook tool. */
+export interface FunctionToolTemplateConfig {
+  /**
+   * Function name the model calls. Start with a letter or an underscore and use
+   * only letters, digits, underscores and dashes, at most 64 characters. When
+   * omitted, the template name is used, so it has to follow the same rule.
+   */
+  name?: string;
+  /** Tells the model when and how to use this tool */
   description?: string;
-  function_definition: ToolDefinition["function"];
-  server_url?: string;
-  server_secret?: string;
+  /** JSON Schema for the tool's arguments */
+  parameters?: Record<string, unknown>;
+  /** Webhook URL for this tool, overriding the assistant's webhook */
+  url?: string;
+  /** Fire-and-forget: don't wait for the webhook's response */
   async?: boolean;
+}
+
+/** `tool_config` of an `end_call` template: there is nothing to configure. */
+export type EndCallToolTemplateConfig = Record<string, never>;
+
+/** `tool_config` of a `transfer_call` template. */
+export interface TransferCallToolTemplateConfig {
+  destinations: TransferDestination[];
+}
+
+interface ToolTemplateBase {
+  id: string;
+  org_id: string;
+  name: string;
+  description: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface ToolTemplateCreateParams {
+/** Discriminated on `tool_type`, so narrowing a template gives you its `tool_config`. */
+export type ToolTemplate =
+  | (ToolTemplateBase & { tool_type: "function"; tool_config: FunctionToolTemplateConfig })
+  | (ToolTemplateBase & { tool_type: "end_call"; tool_config: EndCallToolTemplateConfig })
+  | (ToolTemplateBase & { tool_type: "transfer_call"; tool_config: TransferCallToolTemplateConfig });
+
+interface ToolTemplateCreateBase {
+  /** Display name of the template */
   name: string;
-  description?: string;
-  function_definition: ToolDefinition["function"];
-  server_url?: string;
-  server_secret?: string;
-  async?: boolean;
+  description?: string | null;
 }
+
+export type ToolTemplateCreateParams =
+  | (ToolTemplateCreateBase & { tool_type: "function"; tool_config: FunctionToolTemplateConfig })
+  | (ToolTemplateCreateBase & { tool_type: "end_call"; tool_config: EndCallToolTemplateConfig })
+  | (ToolTemplateCreateBase & { tool_type: "transfer_call"; tool_config: TransferCallToolTemplateConfig });
 
 export interface ToolTemplateUpdateParams {
   name?: string;
-  description?: string;
-  function_definition?: ToolDefinition["function"];
-  server_url?: string;
-  server_secret?: string;
-  async?: boolean;
+  description?: string | null;
+  tool_type?: ToolTemplateType;
+  /** Replaces the stored configuration. Its shape follows `tool_type`. */
+  tool_config?: FunctionToolTemplateConfig | EndCallToolTemplateConfig | TransferCallToolTemplateConfig;
 }
 
 // --- Analysis Templates ---
 
 export interface AnalysisTemplate {
   id: string;
+  org_id: string;
   name: string;
-  description?: string;
+  description: string | null;
+  /** System message that sets the context for the analysis */
+  system_prompt: string;
+  /** User message. Placeholders: `{transcript}`, `{summary}`, `{duration}`, `{caller_number}` */
+  user_prompt: string;
+  /** JSON Schema of the data to extract */
   schema: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -825,33 +897,50 @@ export interface AnalysisTemplate {
 
 export interface AnalysisTemplateCreateParams {
   name: string;
-  description?: string;
+  description?: string | null;
+  /** System message that sets the context for the analysis */
+  system_prompt: string;
+  /** User message. Placeholders: `{transcript}`, `{summary}`, `{duration}`, `{caller_number}` */
+  user_prompt: string;
+  /** JSON Schema of the data to extract */
   schema: Record<string, unknown>;
 }
 
 export interface AnalysisTemplateUpdateParams {
   name?: string;
-  description?: string;
+  description?: string | null;
+  system_prompt?: string;
+  user_prompt?: string;
   schema?: Record<string, unknown>;
 }
 
 // --- Campaigns ---
 
-export type CampaignStatus = "draft" | "scheduled" | "paused" | "completed";
-export type LeadStatus = "pending" | "calling" | "completed" | "failed" | "no_answer";
+export type CampaignStatus = "draft" | "scheduled" | "paused" | "completed" | "cancelled";
+
+/**
+ * The statuses you can set. `completed` is set by the platform, and a completed
+ * campaign can no longer be changed.
+ */
+export type CampaignUpdateStatus = "draft" | "scheduled" | "paused" | "cancelled";
+
+export type LeadStatus = "pending" | "calling" | "completed" | "failed" | "skipped";
 
 export interface Campaign {
   id: string;
   name: string;
   agent_id: string;
   status: CampaignStatus;
-  system_message_template?: string | null;
-  schedule_start_time?: string | null;
-  schedule_end_time?: string | null;
-  timezone?: string | null;
-  total_leads?: number;
-  completed_leads?: number;
-  failed_leads?: number;
+  system_message_template: string | null;
+  /** Daily start time, "HH:MM:SS" */
+  schedule_start_time: string;
+  /** Daily end time, "HH:MM:SS" */
+  schedule_end_time: string;
+  /** IANA timezone of the schedule */
+  timezone: string;
+  total_leads: number;
+  completed_leads: number;
+  failed_leads: number;
   created_at: string;
   updated_at: string;
 }
@@ -859,16 +948,21 @@ export interface Campaign {
 export interface CampaignCreateParams {
   name: string;
   agent_id: string;
+  /** Template with `{{variables}}` filled in per lead */
   system_message_template?: string;
-  schedule_start_time?: string;
-  schedule_end_time?: string;
-  timezone?: string;
+  /** Daily start time, "HH:MM:SS" */
+  schedule_start_time: string;
+  /** Daily end time, "HH:MM:SS" */
+  schedule_end_time: string;
+  /** IANA timezone of the schedule, e.g. "Europe/Amsterdam" */
+  timezone: string;
   leads?: CampaignLeadCreateParams[];
 }
 
 export interface CampaignUpdateParams {
   name?: string;
-  status?: CampaignStatus;
+  /** Use `scheduled` to start the campaign and `paused` to stop it */
+  status?: CampaignUpdateStatus;
   system_message_template?: string;
   schedule_start_time?: string;
   schedule_end_time?: string;
@@ -879,31 +973,71 @@ export interface CampaignLead {
   id: string;
   campaign_id: string;
   phone_number: string;
-  name?: string;
+  variables: Record<string, string>;
   status: LeadStatus;
-  variables?: Record<string, string>;
-  call_id?: string | null;
+  call_id: string | null;
+  attempts: number;
+  last_attempt_at: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface CampaignLeadCreateParams {
+  /** E.164, e.g. "+31612345678" */
   phone_number: string;
-  name?: string;
+  /** Values for the `{{variables}}` in the campaign's system message template */
   variables?: Record<string, string>;
 }
 
 // --- Domains ---
 
+/** A DNS record to add at your DNS provider. */
+export interface DomainRecord {
+  record?: string;
+  name?: string;
+  type?: string;
+  ttl?: string;
+  status?: string;
+  value?: string;
+  priority?: number;
+}
+
 export interface Domain {
   id: string;
-  domain: string;
-  verified: boolean;
+  org_id: string;
+  domain_name: string;
+  resend_domain_id: string | null;
+  /** Verification status, such as "not_started", "pending", "verified" or "failed" */
+  status: string;
+  region: string;
+  /** DNS records to configure */
+  records: DomainRecord[] | null;
   created_at: string;
+  updated_at: string;
+  verified_at: string | null;
 }
 
 export interface DomainCreateParams {
-  domain: string;
+  /** Fully qualified domain name, e.g. "mail.example.com" */
+  domain_name: string;
+}
+
+/** A domain in your Resend account. */
+export interface ResendDomain {
+  id: string;
+  name: string;
+  status: string;
+  region: string;
+}
+
+export interface ResendDomainList {
+  domains: ResendDomain[];
+  /** Resend id of the domain currently selected for your organization */
+  selected_domain_id: string | null;
+}
+
+export interface ResendDomainSyncParams {
+  /** Resend id of the domain to select, from `listResendDomains()` */
+  resendDomainId: string;
 }
 
 // --- Organizations ---

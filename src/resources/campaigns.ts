@@ -5,7 +5,6 @@ import type {
   CampaignUpdateParams,
   CampaignLead,
   CampaignLeadCreateParams,
-  Pagination,
 } from "../types";
 
 export class Campaigns {
@@ -29,7 +28,7 @@ export class Campaigns {
     return res.campaign;
   }
 
-  /** Create a campaign */
+  /** Create a campaign. It starts as a draft; set its status to `scheduled` to start calling. */
   async create(params: CampaignCreateParams): Promise<Campaign> {
     const res = await this.client.request<{ campaign: Campaign }>({
       method: "POST",
@@ -57,16 +56,13 @@ export class Campaigns {
     });
   }
 
-  /** List leads for a campaign */
-  async listLeads(
-    campaignId: string,
-    params?: { limit?: number; offset?: number }
-  ): Promise<{ leads: CampaignLead[]; pagination: Pagination }> {
-    return this.client.request({
+  /** List all leads of a campaign, oldest first */
+  async listLeads(campaignId: string): Promise<CampaignLead[]> {
+    const res = await this.client.request<{ leads: CampaignLead[] }>({
       method: "GET",
       path: `/campaigns/${campaignId}/leads`,
-      query: params as Record<string, string | number | boolean | undefined>,
     });
+    return res.leads;
   }
 
   /** Add a lead to a campaign */
@@ -79,7 +75,7 @@ export class Campaigns {
     return res.lead;
   }
 
-  /** Remove a lead from a campaign */
+  /** Remove a lead from a campaign. A lead that is being called cannot be removed. */
   async removeLead(campaignId: string, leadId: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",

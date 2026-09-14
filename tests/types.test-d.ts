@@ -1,12 +1,57 @@
 import { describe, it, expectTypeOf } from "vitest";
 import type {
+  BYOKProvider,
+  CampaignLeadCreateParams,
+  CampaignStatus,
+  CampaignUpdateParams,
+  Domain,
+  LeadStatus,
+  SipTrunkCreateParams,
   TTSProvider,
   TextLLMProvider,
+  ToolTemplate,
+  ToolTemplateCreateParams,
   Workflow,
   WorkflowConversationNode,
   WorkflowNodeToolDefinition,
   WorkflowSummary,
 } from "../src/types";
+import type { Domains } from "../src/resources/domains";
+
+describe("request parameters", () => {
+  it("requires what the API requires to create a SIP trunk", () => {
+    expectTypeOf<{ name: "Carrier"; provider: "carrier"; address: "sip.example.com" }>().toExtend<SipTrunkCreateParams>();
+    expectTypeOf<{ name: "Carrier" }>().not.toExtend<SipTrunkCreateParams>();
+  });
+
+  it("ties a tool template's tool_config to its tool_type", () => {
+    expectTypeOf<{ name: "Hang up"; tool_type: "end_call"; tool_config: {} }>().toExtend<ToolTemplateCreateParams>();
+    expectTypeOf<{ name: "Transfer"; tool_type: "transfer_call"; tool_config: {} }>().not.toExtend<ToolTemplateCreateParams>();
+    type TransferTemplate = Extract<ToolTemplate, { tool_type: "transfer_call" }>;
+    expectTypeOf<TransferTemplate["tool_config"]["destinations"][number]["number"]>().toEqualTypeOf<string>();
+  });
+
+  it("cannot set a campaign to completed", () => {
+    expectTypeOf<"cancelled">().toExtend<NonNullable<CampaignUpdateParams["status"]>>();
+    expectTypeOf<"completed">().not.toExtend<NonNullable<CampaignUpdateParams["status"]>>();
+    expectTypeOf<"cancelled">().toExtend<CampaignStatus>();
+  });
+
+  it("uses the lead statuses the API returns, and no lead name", () => {
+    expectTypeOf<"skipped">().toExtend<LeadStatus>();
+    expectTypeOf<"no_answer">().not.toExtend<LeadStatus>();
+    expectTypeOf<CampaignLeadCreateParams>().not.toHaveProperty("name");
+  });
+
+  it("returns null from domains.get() when no domain is configured", () => {
+    expectTypeOf<Domains["get"]>().returns.resolves.toEqualTypeOf<Domain | null>();
+  });
+
+  it("accepts every BYOK provider the API accepts", () => {
+    expectTypeOf<"inworld">().toExtend<BYOKProvider>();
+    expectTypeOf<"google_vertex">().toExtend<BYOKProvider>();
+  });
+});
 
 // Type-level tests. They run under `vitest run` because vitest.config.ts enables the
 // typecheck runner; a type error in this file is a failing test, not a silent pass.
