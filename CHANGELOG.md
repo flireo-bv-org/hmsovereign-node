@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-15
+
+This release contains breaking changes. See Changed and Removed.
+
 ### Added
 
 - `client.workflows` with `list`, `create`, `get`, `update` and `delete`, and types for workflow definitions.
@@ -71,6 +75,7 @@ All notable changes to this package are documented in this file. The format is b
 - Automatic retries with exponential backoff on 5xx and 429 responses.
 - Webhook signature verification.
 
-[Unreleased]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/flireo-bv-org/hmsovereign-node/releases/tag/v1.0.0
