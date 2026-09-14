@@ -911,16 +911,54 @@ export interface DomainCreateParams {
 export interface Organization {
   id: string;
   name: string;
-  email?: string;
-  credits_balance?: number;
-  plan?: string;
+  /** Available minutes balance. */
+  minutes_balance: number;
+  monthly_usage_minutes: number;
+  active_numbers: number;
+  active_agents: number;
+  active_calls: number;
+  has_local_models_access?: boolean;
+  /** Set when this is a child organization of an agency. */
+  parent_org_id?: string | null;
+  /** Only present when requested with `include_children`. */
+  children?: OrganizationChild[];
+}
+
+export interface OrganizationChild {
+  id: string;
+  name: string;
   created_at: string;
 }
 
 export interface OrganizationCreateParams {
   name: string;
-  email?: string;
+  /** Bill the new organization to this parent (whitelabel). */
+  parent_org_id?: string;
 }
+
+/** A newly created organization. The API key is returned once, here, and never again. */
+export interface OrganizationCreated {
+  id: string;
+  name: string;
+  parent_org_id?: string | null;
+  api_key: string;
+  created_at: string;
+}
+
+/** Retention periods in days. */
+export interface OrganizationRetention {
+  /** Transcript, summary, analysis result and recording. */
+  content_retention_days: 30 | 90 | 180 | 365;
+  /** Caller's phone number, campaign link and call events. */
+  metadata_retention_days: 30 | 90 | 180 | 365 | 730;
+}
+
+/**
+ * Both periods are required: they are validated against each other, and content
+ * can never be kept longer than metadata, because a transcript usually repeats
+ * the caller's number.
+ */
+export type OrganizationUpdateParams = OrganizationRetention;
 
 // --- Webhook Payloads ---
 

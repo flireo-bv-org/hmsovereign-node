@@ -67,9 +67,24 @@ client.byok               // Bring Your Own Key management
 client.toolTemplates      // Reusable tool/function templates
 client.analysisTemplates  // Post-call analysis schemas
 client.domains            // Custom domain configuration
-client.organizations      // Organization management
+client.organizations      // Organization details, child organizations, retention
 client.workflows          // Multi-step call flows (graph of conversation, tool, transfer and end nodes)
 ```
+
+## Retention
+
+How long your calls are kept is yours to set. There are two periods, and content can never be kept longer than metadata — a transcript usually repeats the caller's number, so a shorter metadata period would otherwise mean nothing.
+
+```typescript
+await client.organizations.update({
+  content_retention_days: 90,  // transcript, summary, analysis, recording
+  metadata_retention_days: 365, // caller's number, campaign link, call events
+});
+```
+
+Allowed values are 30, 90, 180 and 365 days for content, and those plus 730 for metadata. Both fields are required, because the API validates them against each other.
+
+Shortening a period destroys data: a nightly cleanup erases everything past it, and that cannot be undone. Lengthening one brings nothing back.
 
 ## Outbound Calls
 
