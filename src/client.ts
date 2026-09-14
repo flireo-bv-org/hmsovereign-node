@@ -1,4 +1,5 @@
 import type { ApiError } from "./types";
+import { VERSION } from "./version";
 import {
   ApiRequestError,
   AuthenticationError,
@@ -51,7 +52,7 @@ export class HttpClient {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
-      "User-Agent": "hmsovereign-node/1.0.0",
+      "User-Agent": `hmsovereign-node/${VERSION}`,
     };
 
     let lastError: Error | undefined;
