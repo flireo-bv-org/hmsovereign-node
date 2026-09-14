@@ -1,4 +1,5 @@
 import type { ApiError } from "./types";
+import { VERSION } from "./version";
 import {
   ApiRequestError,
   AuthenticationError,
@@ -139,7 +140,7 @@ export class HttpClient {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
-          "User-Agent": "hmsovereign-node/1.0.0",
+          "User-Agent": `hmsovereign-node/${VERSION}`,
         },
         body: options.body ? JSON.stringify(options.body) : undefined,
         signal: controller.signal,

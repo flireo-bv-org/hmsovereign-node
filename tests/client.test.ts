@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { HMSSovereign, AuthenticationError } from "../src/index";
+import { VERSION } from "../src/version";
 
 describe("HMSSovereign", () => {
   it("throws AuthenticationError without API key", () => {
@@ -26,5 +27,19 @@ describe("HMSSovereign", () => {
     expect(client.domains).toBeDefined();
     expect(client.organizations).toBeDefined();
     expect(client.workflows).toBeDefined();
+  });
+
+  it("sends the package version in the User-Agent header", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ assistants: [] }), { status: 200 })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await new HMSSovereign({ apiKey: "fl_test_123" }).assistants.list();
+      const init = fetchMock.mock.calls[0][1] as RequestInit;
+      expect((init.headers as Record<string, string>)["User-Agent"]).toBe(`hmsovereign-node/${VERSION}`);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

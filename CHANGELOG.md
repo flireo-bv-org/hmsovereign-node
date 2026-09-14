@@ -26,6 +26,8 @@ All notable changes to this package are documented in this file. The format is b
 - `Organization` matches the response of `GET /organizations`.
 - `organizations.create()` returns `OrganizationCreated`, which includes the API key issued for the new organization.
 - `OrganizationCreateParams` drops `email` and adds `parent_org_id`.
+- The package exports separate type definitions for `import` and `require`, so ESM projects resolve the ESM types.
+- The `User-Agent` header reports the installed package version.
 - `sipTrunks.create()` sends `name`, `provider` and `address`, plus the optional `auth_username`, `auth_password` and `transport`. `SipTrunk` includes `address`, `transport` and `is_active`.
 - Tool templates use `tool_type` and `tool_config`. `ToolTemplate` and `ToolTemplateCreateParams` are discriminated on `tool_type`.
 - Creating an analysis template requires `system_prompt`, `user_prompt` and `schema`.
@@ -45,6 +47,7 @@ All notable changes to this package are documented in this file. The format is b
 
 ### Removed
 
+- Support for Node.js 20, which reached end of life on 30 April 2026. The package requires Node.js 22 or later.
 - `byok.getConfig()`.
 - The `limit` and `offset` parameters of `campaigns.listLeads()`.
 - `name` on `CampaignLeadCreateParams` and `CampaignLead`, and `updated_at` on `CampaignLead`.
