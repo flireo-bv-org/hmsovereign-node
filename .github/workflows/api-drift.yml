@@ -1,0 +1,25 @@
+name: API drift
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Refresh the operations from the published specification
+        run: node scripts/refresh-api-operations.mjs
+
+      - name: Fail when the specification changed
+        run: git diff --exit-code tests/fixtures/api-operations.json

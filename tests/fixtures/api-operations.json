@@ -1,0 +1,257 @@
+{
+  "source": "https://doc.voicedock.ai/openapi.bundled.json",
+  "operations": [
+    {
+      "operation": "DELETE /analysis-templates/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /assistants/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /byok",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /campaigns/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /campaigns/{}/leads/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /chats/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /domains",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /numbers/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /sip-trunks/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /tool-templates/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /workflows/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /account",
+      "deprecated": true
+    },
+    {
+      "operation": "GET /analysis-templates",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /analysis-templates/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /assistants",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /assistants/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /byok",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /calls",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /calls/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /campaigns",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /campaigns/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /campaigns/{}/leads",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /chats",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /chats/context",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /domains",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /domains/sync",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /health",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /numbers",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /numbers/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /organizations",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /sip-trunks",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /sip-trunks/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /tool-templates",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /tool-templates/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /usage",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /voices",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /workflows",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /workflows/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "PATCH /analysis-templates/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "PATCH /assistants/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "PATCH /campaigns/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "PATCH /numbers/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "PATCH /organizations",
+      "deprecated": false
+    },
+    {
+      "operation": "PATCH /tool-templates/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "PATCH /workflows/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /analysis-templates",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /assistants",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /byok",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /byok/config",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /calls/{}/control",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /calls/outbound",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /campaigns",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /campaigns/{}/leads",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /chats",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /domains",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /domains/refresh",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /domains/sync",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /domains/verify",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /numbers",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /organizations",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /sip-trunks",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /tool-templates",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /workflows",
+      "deprecated": false
+    }
+  ]
+}

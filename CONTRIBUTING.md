@@ -20,7 +20,11 @@ npm test
 npm run build
 ```
 
-`npm test` also runs the type tests in `tests/**/*.test-d.ts`.
+`npm test` also runs the type tests in `tests/**/*.test-d.ts`. `npm run check:readme` typechecks the examples in `README.md`.
+
+## Keeping up with the API
+
+`tests/coverage.test.ts` compares the operations the SDK requests with `tests/fixtures/api-operations.json`, a list taken from the published API specification. When the API changes, run `npm run refresh:api-operations`, then either wrap the new operation or add it to `NOT_WRAPPED` with a reason. A scheduled workflow fails when the published specification no longer matches the list.
 
 ## Pull requests
 
