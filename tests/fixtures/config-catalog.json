@@ -1,10 +1,4 @@
 {
-  "_meta": {
-    "note": "GEGENEREERD uit catalog/config-catalog.yaml door scripts/gen-config-schemas.mjs. Niet met de hand bewerken; bewerk de YAML en draai npm run gen:schemas.",
-    "source_repo": "https://github.com/flireo-bv-org/voicedock-api-spec",
-    "source_path": "catalog/config-catalog.yaml",
-    "published_path": "catalog/config-catalog.json"
-  },
   "version": 1,
   "pricing_units": {
     "llm": [
@@ -128,6 +122,33 @@
         }
       },
       {
+        "id": "google",
+        "label": "Google Gemini (Vertex AI, EU)",
+        "kind": "text",
+        "byok_secret": "google_vertex_secret_id",
+        "default_model": "gemini-3.5-flash-lite",
+        "postcall_model": "gemini-2.5-flash-lite",
+        "models": [
+          "gemini-3.5-flash-lite",
+          "gemini-3.5-flash",
+          "gemini-2.5-flash-lite",
+          "gemini-2.5-flash"
+        ],
+        "vertex_location": {
+          "gemini-3.5-flash-lite": "eu",
+          "gemini-3.5-flash": "eu",
+          "gemini-2.5-flash-lite": "europe-west4",
+          "gemini-2.5-flash": "europe-west4"
+        },
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        }
+      },
+      {
         "id": "google_realtime",
         "label": "Google Gemini Live",
         "kind": "realtime",
@@ -158,10 +179,7 @@
           "units": [
             "per_1m_audio_tokens_in",
             "per_1m_audio_tokens_out"
-          ],
-          "exempt": {
-            "gemini-live-2.5-flash-native-audio": "Het Vertex-pad gaat all-in voor EUR 0,25 per minuut via de DB-trigger. usage_billing slaat dit model bewust over (_is_vertex_realtime matcht op de naam), dus een prijsrij zou nooit gelezen worden. De vrijstelling geldt alleen voor deze naam: de AI-Studio-naam van dezelfde generatie loopt wel over de tokenprijzen en heeft dus wel rijen nodig."
-          }
+          ]
         },
         "default_voice": "Puck",
         "voices": [
@@ -249,6 +267,38 @@
           "zagan",
           "zenith"
         ]
+      },
+      {
+        "id": "openai_live",
+        "label": "OpenAI GPT-Live",
+        "kind": "realtime",
+        "byok_secret": "openai_secret_id",
+        "default_model": "gpt-live-1",
+        "postcall_model": "gpt-5.4-mini",
+        "models": [
+          "gpt-live-1"
+        ],
+        "pricing": {
+          "type": "realtime",
+          "units": [
+            "per_minute"
+          ]
+        },
+        "default_voice": "marin",
+        "voices": [
+          "marin",
+          "beacon",
+          "cinder",
+          "stone",
+          "vesper"
+        ],
+        "delegation": {
+          "provider": "openai",
+          "default_model": "gpt-5.6-luna",
+          "models": [
+            "gpt-5.6-luna"
+          ]
+        }
       }
     ]
   },
@@ -314,6 +364,24 @@
             "per_minute"
           ]
         }
+      },
+      {
+        "id": "google",
+        "label": "Google Cloud Speech (EU)",
+        "byok_secret": "google_vertex_secret_id",
+        "default_model": "chirp_3",
+        "models": [
+          "chirp_3"
+        ],
+        "vertex_location": {
+          "chirp_3": "eu"
+        },
+        "pricing": {
+          "type": "stt",
+          "units": [
+            "per_minute_streaming"
+          ]
+        }
       }
     ],
     "languages": [
@@ -345,7 +413,40 @@
       "tr",
       "id",
       "vi"
-    ]
+    ],
+    "bcp47": {
+      "multi": [
+        "nl-NL",
+        "en-US"
+      ],
+      "nl": "nl-NL",
+      "en": "en-US",
+      "de": "de-DE",
+      "fr": "fr-FR",
+      "es": "es-ES",
+      "it": "it-IT",
+      "pt": "pt-PT",
+      "pl": "pl-PL",
+      "ru": "ru-RU",
+      "ja": "ja-JP",
+      "ko": "ko-KR",
+      "zh": "cmn-Hans-CN",
+      "ar": "ar-XA",
+      "hi": "hi-IN",
+      "da": "da-DK",
+      "sv": "sv-SE",
+      "no": "nb-NO",
+      "fi": "fi-FI",
+      "cs": "cs-CZ",
+      "hu": "hu-HU",
+      "ro": "ro-RO",
+      "bg": "bg-BG",
+      "hr": "hr-HR",
+      "sk": "sk-SK",
+      "tr": "tr-TR",
+      "id": "id-ID",
+      "vi": "vi-VN"
+    }
   },
   "tts": {
     "aliases": {
@@ -396,20 +497,38 @@
       },
       {
         "id": "google",
-        "label": "Google (Gemini TTS)",
-        "byok_secret": "google_secret_id",
+        "label": "Google (Gemini TTS, Chirp 3 HD)",
+        "byok_secret": [
+          "google_secret_id",
+          "google_vertex_secret_id"
+        ],
         "default_model": "gemini-3.1-flash-tts-preview",
         "models": [
           "gemini-3.1-flash-tts-preview",
           "gemini-2.5-flash-preview-tts",
-          "gemini-2.5-pro-preview-tts"
+          "gemini-2.5-pro-preview-tts",
+          "chirp-3-hd"
         ],
+        "model_requires": {
+          "gemini-3.1-flash-tts-preview": "google_secret_id",
+          "gemini-2.5-flash-preview-tts": "google_secret_id",
+          "gemini-2.5-pro-preview-tts": "google_secret_id",
+          "chirp-3-hd": "google_vertex_secret_id"
+        },
+        "vertex_location": {
+          "chirp-3-hd": "eu"
+        },
         "pricing": {
           "type": "tts",
           "units": [
             "per_1m_input_tokens",
             "per_1m_output_tokens"
-          ]
+          ],
+          "per_model": {
+            "chirp-3-hd": [
+              "per_1m_chars"
+            ]
+          }
         },
         "default_voice": "Kore",
         "voice_id": "enum",
@@ -553,6 +672,11 @@
       "speed": {
         "min": 0.5,
         "max": 2
+      },
+      "speaking_rate": {
+        "min": 0.25,
+        "max": 2,
+        "default": 1
       }
     },
     "stt": {
@@ -660,6 +784,1258 @@
       "first_message_outbound": {
         "max_length": 300
       }
+    }
+  },
+  "schemas": {
+    "llm": {
+      "discriminator": {
+        "propertyName": "provider"
+      },
+      "oneOf": [
+        {
+          "title": "OpenAI",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "openai"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gpt-5.4",
+                "gpt-5.4-mini",
+                "gpt-5.4-nano",
+                "gpt-5.2",
+                "gpt-5.1",
+                "gpt-5",
+                "gpt-5-mini",
+                "gpt-5-nano",
+                "gpt-4.1",
+                "gpt-4.1-mini",
+                "gpt-4.1-nano",
+                "gpt-5.6-luna",
+                "gpt-5.6-terra",
+                "gpt-5.6-sol",
+                "gpt-4o-mini"
+              ]
+            },
+            "max_completion_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32768
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.7
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "user",
+                      "assistant"
+                    ]
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "$ref": "./ToolDefinition.yaml"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "xAI (Grok text)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "xai"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "grok-4.3"
+              ]
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.7
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "user",
+                      "assistant"
+                    ]
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "$ref": "./ToolDefinition.yaml"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "Mistral",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "mistral"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "mistral-medium-latest",
+                "mistral-small-latest",
+                "mistral-large-latest",
+                "ministral-8b-latest",
+                "ministral-14b-latest",
+                "ministral-3b-latest"
+              ]
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.7
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "user",
+                      "assistant"
+                    ]
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "$ref": "./ToolDefinition.yaml"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "Google Gemini (Vertex AI, EU)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "google"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gemini-3.5-flash-lite",
+                "gemini-3.5-flash",
+                "gemini-2.5-flash-lite",
+                "gemini-2.5-flash"
+              ]
+            },
+            "max_completion_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32768
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.7
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "user",
+                      "assistant"
+                    ]
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "$ref": "./ToolDefinition.yaml"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "Google Gemini Live",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "google_realtime"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gemini-live-2.5-flash-native-audio",
+                "gemini-2.5-flash-native-audio-preview-12-2025",
+                "gemini-3.1-flash-live-preview"
+              ]
+            },
+            "voice": {
+              "type": "string",
+              "enum": [
+                "Puck",
+                "Achernar",
+                "Achird",
+                "Algenib",
+                "Algieba",
+                "Alnilam",
+                "Aoede",
+                "Autonoe",
+                "Callirrhoe",
+                "Charon",
+                "Despina",
+                "Enceladus",
+                "Erinome",
+                "Fenrir",
+                "Gacrux",
+                "Iapetus",
+                "Kore",
+                "Laomedeia",
+                "Leda",
+                "Orus",
+                "Pulcherrima",
+                "Rasalgethi",
+                "Sadachbia",
+                "Sadaltager",
+                "Schedar",
+                "Sulafat",
+                "Umbriel",
+                "Vindemiatrix",
+                "Zephyr",
+                "Zubenelgenubi"
+              ],
+              "default": "Puck"
+            },
+            "vertexai": {
+              "type": "boolean",
+              "default": false
+            },
+            "location": {
+              "type": "string"
+            },
+            "analysis_model": {
+              "type": "string"
+            },
+            "max_output_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32768
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.7
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "user",
+                      "assistant"
+                    ]
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "$ref": "./ToolDefinition.yaml"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "xAI (Grok Realtime)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "xai_realtime"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "grok-voice-think-fast-2.0",
+                "grok-voice-think-fast-1.0",
+                "grok-voice-latest",
+                "grok-realtime-v1"
+              ]
+            },
+            "voice": {
+              "type": "string",
+              "enum": [
+                "ara",
+                "eve",
+                "leo",
+                "rex",
+                "sal",
+                "altair",
+                "atlas",
+                "carina",
+                "castor",
+                "celeste",
+                "cosmo",
+                "helios",
+                "helix",
+                "iris",
+                "kepler",
+                "lumen",
+                "luna",
+                "lux",
+                "naksh",
+                "orion",
+                "perseus",
+                "rigel",
+                "sirius",
+                "ursa",
+                "zagan",
+                "zenith"
+              ],
+              "default": "ara"
+            },
+            "turn_detection": {
+              "type": "object",
+              "properties": {
+                "threshold": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "default": 0.5
+                },
+                "prefix_padding_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 2000,
+                  "default": 300
+                },
+                "silence_duration_ms": {
+                  "type": "number",
+                  "minimum": 100,
+                  "maximum": 2000,
+                  "default": 200
+                },
+                "idle_timeout_ms": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 30000
+                }
+              }
+            },
+            "reasoning_effort": {
+              "type": "string",
+              "enum": [
+                "none",
+                "high"
+              ]
+            },
+            "speed": {
+              "type": "number",
+              "minimum": 0.7,
+              "maximum": 1.5,
+              "default": 1
+            },
+            "transcription": {
+              "type": "object",
+              "properties": {
+                "language_hint": {
+                  "type": "string"
+                },
+                "keyterms": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 50
+                  },
+                  "maxItems": 100
+                }
+              }
+            },
+            "provider_tools": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "title": "Web search",
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "web_search"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  {
+                    "title": "X search",
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "x_search"
+                        ]
+                      },
+                      "allowed_x_handles": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "maxItems": 20
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  {
+                    "title": "Collection search",
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "file_search"
+                        ]
+                      },
+                      "vector_store_ids": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1
+                      },
+                      "max_num_results": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 50
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "vector_store_ids"
+                    ]
+                  }
+                ]
+              }
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.7
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "user",
+                      "assistant"
+                    ]
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "$ref": "./ToolDefinition.yaml"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "OpenAI GPT-Live",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "openai_live"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gpt-live-1"
+              ]
+            },
+            "voice": {
+              "type": "string",
+              "enum": [
+                "marin",
+                "beacon",
+                "cinder",
+                "stone",
+                "vesper"
+              ],
+              "default": "marin"
+            },
+            "delegation": {
+              "type": "object",
+              "properties": {
+                "model": {
+                  "type": "string",
+                  "enum": [
+                    "gpt-5.6-luna"
+                  ],
+                  "default": "gpt-5.6-luna"
+                },
+                "instructions": {
+                  "type": "string"
+                }
+              }
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 0.7
+            },
+            "messages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "system",
+                      "user",
+                      "assistant"
+                    ]
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "$ref": "./ToolDefinition.yaml"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        }
+      ]
+    },
+    "stt": {
+      "discriminator": {
+        "propertyName": "provider"
+      },
+      "oneOf": [
+        {
+          "title": "Deepgram",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "deepgram"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "nova-3",
+                "nova-3-general"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "multi",
+                "nl",
+                "en",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pt",
+                "pl",
+                "ru",
+                "ja",
+                "ko",
+                "zh",
+                "ar",
+                "hi",
+                "da",
+                "sv",
+                "no",
+                "fi",
+                "cs",
+                "hu",
+                "ro",
+                "bg",
+                "hr",
+                "sk",
+                "tr",
+                "id",
+                "vi"
+              ]
+            },
+            "keyterms": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "smart_format": {
+              "type": "boolean"
+            },
+            "endpointing": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5000
+            },
+            "numerals": {
+              "type": "boolean"
+            },
+            "filler_words": {
+              "type": "boolean"
+            },
+            "utterance_end_ms": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 5000
+            },
+            "no_delay": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "provider",
+            "model",
+            "language"
+          ]
+        },
+        {
+          "title": "ElevenLabs Scribe",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "elevenlabs"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "scribe_v2_realtime"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "multi",
+                "nl",
+                "en",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pt",
+                "pl",
+                "ru",
+                "ja",
+                "ko",
+                "zh",
+                "ar",
+                "hi",
+                "da",
+                "sv",
+                "no",
+                "fi",
+                "cs",
+                "hu",
+                "ro",
+                "bg",
+                "hr",
+                "sk",
+                "tr",
+                "id",
+                "vi"
+              ]
+            },
+            "tag_audio_events": {
+              "type": "boolean"
+            },
+            "include_timestamps": {
+              "type": "boolean"
+            },
+            "sample_rate": {
+              "type": "number",
+              "enum": [
+                16000,
+                8000
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model",
+            "language"
+          ]
+        },
+        {
+          "title": "Gladia",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "gladia"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "solaria-1"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "multi",
+                "nl",
+                "en",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pt",
+                "pl",
+                "ru",
+                "ja",
+                "ko",
+                "zh",
+                "ar",
+                "hi",
+                "da",
+                "sv",
+                "no",
+                "fi",
+                "cs",
+                "hu",
+                "ro",
+                "bg",
+                "hr",
+                "sk",
+                "tr",
+                "id",
+                "vi"
+              ]
+            },
+            "languages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "code_switching": {
+              "type": "boolean"
+            },
+            "region": {
+              "type": "string",
+              "enum": [
+                "eu-west",
+                "us-west"
+              ]
+            },
+            "endpointing": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 1
+            },
+            "custom_vocabulary": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "translation_enabled": {
+              "type": "boolean"
+            },
+            "translation_target_languages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "provider",
+            "model",
+            "language"
+          ]
+        },
+        {
+          "title": "Mistral (Voxtral)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "mistral"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "voxtral-mini-latest"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "multi",
+                "nl",
+                "en",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pt",
+                "pl",
+                "ru",
+                "ja",
+                "ko",
+                "zh",
+                "ar",
+                "hi",
+                "da",
+                "sv",
+                "no",
+                "fi",
+                "cs",
+                "hu",
+                "ro",
+                "bg",
+                "hr",
+                "sk",
+                "tr",
+                "id",
+                "vi"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model",
+            "language"
+          ]
+        },
+        {
+          "title": "Google Cloud Speech (EU)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "google"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "chirp_3"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "multi",
+                "nl",
+                "en",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pt",
+                "pl",
+                "ru",
+                "ja",
+                "ko",
+                "zh",
+                "ar",
+                "hi",
+                "da",
+                "sv",
+                "no",
+                "fi",
+                "cs",
+                "hu",
+                "ro",
+                "bg",
+                "hr",
+                "sk",
+                "tr",
+                "id",
+                "vi"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model",
+            "language"
+          ]
+        }
+      ]
+    },
+    "tts": {
+      "discriminator": {
+        "propertyName": "provider"
+      },
+      "oneOf": [
+        {
+          "title": "ElevenLabs",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "elevenlabs"
+              ]
+            },
+            "voice_id": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "eleven_flash_v2_5",
+                "eleven_v3",
+                "eleven_multilingual_v2",
+                "eleven_turbo_v2_5"
+              ]
+            },
+            "stability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "similarity_boost": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "style": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "use_speaker_boost": {
+              "type": "boolean"
+            },
+            "speed": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 2
+            },
+            "apply_text_normalization": {
+              "type": "string",
+              "enum": [
+                "auto",
+                "on",
+                "off"
+              ]
+            },
+            "apply_language_text_normalization": {
+              "type": "boolean"
+            },
+            "language": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider",
+            "voice_id"
+          ]
+        },
+        {
+          "title": "Inworld",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "inworld"
+              ]
+            },
+            "voice_id": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "inworld-tts-2",
+                "inworld-tts-2-flash",
+                "inworld-tts-1.5-max",
+                "inworld-tts-1.5-mini"
+              ]
+            },
+            "language": {
+              "type": "string"
+            },
+            "speed": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "provider",
+            "voice_id"
+          ]
+        },
+        {
+          "title": "Google (Gemini TTS, Chirp 3 HD)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "google"
+              ]
+            },
+            "voice_id": {
+              "type": "string",
+              "enum": [
+                "Kore",
+                "Zephyr",
+                "Puck",
+                "Achernar",
+                "Achird",
+                "Algenib",
+                "Algieba",
+                "Alnilam",
+                "Aoede",
+                "Autonoe",
+                "Callirrhoe",
+                "Charon",
+                "Despina",
+                "Enceladus",
+                "Erinome",
+                "Fenrir",
+                "Gacrux",
+                "Iapetus",
+                "Laomedeia",
+                "Leda",
+                "Orus",
+                "Pulcherrima",
+                "Rasalgethi",
+                "Sadachbia",
+                "Sadaltager",
+                "Schedar",
+                "Sulafat",
+                "Umbriel",
+                "Vindemiatrix",
+                "Zubenelgenubi"
+              ],
+              "default": "Kore"
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gemini-3.1-flash-tts-preview",
+                "gemini-2.5-flash-preview-tts",
+                "gemini-2.5-pro-preview-tts",
+                "chirp-3-hd"
+              ]
+            },
+            "instructions": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string"
+            },
+            "speaking_rate": {
+              "type": "number",
+              "minimum": 0.25,
+              "maximum": 2,
+              "default": 1
+            }
+          },
+          "required": [
+            "provider",
+            "voice_id"
+          ]
+        },
+        {
+          "title": "xAI (Grok TTS)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "xai"
+              ]
+            },
+            "voice_id": {
+              "type": "string",
+              "enum": [
+                "ara",
+                "eve",
+                "leo",
+                "rex",
+                "sal",
+                "altair",
+                "atlas",
+                "carina",
+                "castor",
+                "celeste",
+                "cosmo",
+                "helios",
+                "helix",
+                "iris",
+                "kepler",
+                "lumen",
+                "luna",
+                "lux",
+                "naksh",
+                "orion",
+                "perseus",
+                "rigel",
+                "sirius",
+                "ursa",
+                "zagan",
+                "zenith"
+              ],
+              "default": "ara"
+            },
+            "language": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider",
+            "voice_id"
+          ]
+        }
+      ]
     }
   }
 }

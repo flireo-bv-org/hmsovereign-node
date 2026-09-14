@@ -3,6 +3,7 @@ import type {
   Organization,
   OrganizationCreateParams,
   OrganizationCreated,
+  OrganizationGetParams,
   OrganizationRetention,
   OrganizationUpdateParams,
 } from "../types";
@@ -10,11 +11,13 @@ import type {
 export class Organizations {
   constructor(private readonly client: HttpClient) {}
 
-  /** Get your organization details */
-  async get(): Promise<Organization> {
+  /** Get your organization details. Pass `include_children: true` to get the child organizations too. */
+  async get(params?: OrganizationGetParams): Promise<Organization> {
     return this.client.request({
       method: "GET",
       path: "/organizations",
+      query:
+        params?.include_children === undefined ? undefined : { include_children: params.include_children },
     });
   }
 

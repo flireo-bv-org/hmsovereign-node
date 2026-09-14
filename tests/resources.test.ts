@@ -306,7 +306,17 @@ describe("Voices", () => {
 describe("Usage", () => {
   it("list() returns { logs, pagination, summary }", async () => {
     const response = {
-      logs: [{ id: "u1", duration_sec: 120 }],
+      logs: [
+        {
+          id: "u1",
+          duration_sec: 120,
+          call_type: "web",
+          phone_number: null,
+          agent_name: null,
+          business_name: null,
+          created_at: "2026-01-01T00:00:00Z",
+        },
+      ],
       pagination: { total: 1, limit: 100, offset: 0 },
       summary: { total_calls: 1, total_duration_seconds: 120, total_duration_minutes: 2 },
     };
@@ -318,6 +328,7 @@ describe("Usage", () => {
     expect(result.logs).toHaveLength(1);
     expect(result.summary.total_calls).toBe(1);
     expect(result.pagination.total).toBe(1);
+    expect(result.logs[0].call_type).toBe("web");
   });
 });
 
@@ -646,6 +657,22 @@ describe("Organizations", () => {
     const result = await orgs.get();
 
     expect(result.name).toBe("Acme");
+    expect(mock.lastRequest.query).toBeUndefined();
+  });
+
+  it("get() asks for child organizations with include_children", async () => {
+    mock.onRequest("GET", "/organizations", {
+      id: "o1",
+      name: "Acme",
+      children: [{ id: "o2", name: "Acme Child", created_at: "2026-01-01T00:00:00Z" }],
+    });
+
+    const orgs = new Organizations(mock as any);
+    const result = await orgs.get({ include_children: true });
+
+    expect(mock.lastRequest).toMatchObject({ method: "GET", path: "/organizations" });
+    expect(mock.lastRequest.query).toEqual({ include_children: true });
+    expect(result.children?.[0].name).toBe("Acme Child");
   });
 
   it("create() calls POST /organizations", async () => {

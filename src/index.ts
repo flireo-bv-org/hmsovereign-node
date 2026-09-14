@@ -81,6 +81,9 @@ export type {
   RealtimeLLMProvider,
   GoogleRealtimeVoice,
   XAIRealtimeVoice,
+  OpenAILiveVoice,
+  LLMDelegation,
+  XAITurnDetection,
   LLMMessage,
   LLMConfig,
   ToolDefinition,
@@ -89,8 +92,10 @@ export type {
   TTSProvider,
   TTSConfig,
 
-  // Analysis
+  // Analysis and speech
   AnalysisPlan,
+  SpeechConfig,
+  RecordingConsent,
 
   // Assistants
   Assistant,
@@ -178,6 +183,7 @@ export type {
   // Organizations
   Organization,
   OrganizationChild,
+  OrganizationGetParams,
   OrganizationCreateParams,
   OrganizationCreated,
   OrganizationRetention,

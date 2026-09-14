@@ -20,17 +20,16 @@ export interface ApiError {
 
 // --- Providers ---
 //
-// The provider ids below mirror the platform catalog (`catalog/config-catalog.yaml`
-// in the api-spec repo, published as `catalog/config-catalog.json`). That catalog is
-// the single source of truth: the API validates a config against it, and a provider
-// it knows but this SDK does not is a provider you cannot express in TypeScript.
+// The provider ids below mirror the platform's config catalog. That catalog is the
+// single source of truth: the API validates a config against it, and a provider it
+// knows but this SDK does not is a provider you cannot express in TypeScript.
 //
 // They are runtime arrays rather than bare unions so `tests/catalog.test.ts` can
 // compare them against a vendored copy of the catalog. The union is derived from the
 // array, so the two can never drift from each other.
 
 /** Speech-to-text providers (catalog section `stt`). */
-export const STT_PROVIDERS = ["deepgram", "elevenlabs", "gladia", "mistral"] as const;
+export const STT_PROVIDERS = ["deepgram", "elevenlabs", "gladia", "mistral", "google"] as const;
 
 export type STTProvider = (typeof STT_PROVIDERS)[number];
 
@@ -39,12 +38,12 @@ export type STTProvider = (typeof STT_PROVIDERS)[number];
  * separate steps. A workflow node may only override to one of these - a realtime
  * provider per node is rejected at write time.
  */
-export const TEXT_LLM_PROVIDERS = ["openai", "xai", "mistral"] as const;
+export const TEXT_LLM_PROVIDERS = ["openai", "xai", "mistral", "google"] as const;
 
 export type TextLLMProvider = (typeof TEXT_LLM_PROVIDERS)[number];
 
 /** Realtime (speech-to-speech) LLM providers. */
-export const REALTIME_LLM_PROVIDERS = ["google_realtime", "xai_realtime"] as const;
+export const REALTIME_LLM_PROVIDERS = ["google_realtime", "xai_realtime", "openai_live"] as const;
 
 export type RealtimeLLMProvider = (typeof REALTIME_LLM_PROVIDERS)[number];
 
@@ -126,6 +125,11 @@ export const XAI_REALTIME_VOICES = [
 
 export type XAIRealtimeVoice = (typeof XAI_REALTIME_VOICES)[number];
 
+/** Speech-to-speech voices of OpenAI GPT-Live (`llm_config.provider: "openai_live"`). */
+export const OPENAI_LIVE_VOICES = ["marin", "beacon", "cinder", "stone", "vesper"] as const;
+
+export type OpenAILiveVoice = (typeof OPENAI_LIVE_VOICES)[number];
+
 // --- STT Config ---
 
 export interface STTConfig {
@@ -182,10 +186,42 @@ export interface LLMConfig {
   provider: LLMProvider;
   model: string;
   /** Realtime providers only: the speech-to-speech voice of the model */
-  voice?: GoogleRealtimeVoice | XAIRealtimeVoice;
+  voice?: GoogleRealtimeVoice | XAIRealtimeVoice | OpenAILiveVoice;
   temperature?: number;
+  /**
+   * `openai` and `google` only (1-32768): the most tokens the model may produce
+   * per reply. When omitted, the provider's own limit applies.
+   */
+  max_completion_tokens?: number;
+  /** `openai_live` only: the backend model the voice model hands reasoning and tool calls to */
+  delegation?: LLMDelegation;
+  /** `xai_realtime` only: server-side turn detection. Omitted fields use the provider default. */
+  turn_detection?: XAITurnDetection;
   messages?: LLMMessage[];
   tools?: ToolDefinition[];
+}
+
+/** Backend model of an `openai_live` assistant. */
+export interface LLMDelegation {
+  /** Backend model for reasoning and tool calls, e.g. "gpt-5.6-luna" */
+  model?: string;
+  /**
+   * Instructions for the backend model only. When omitted, it receives the same
+   * system prompt as the voice model.
+   */
+  instructions?: string;
+}
+
+/** Turn detection of an `xai_realtime` assistant. Values outside the ranges are clamped. */
+export interface XAITurnDetection {
+  /** Speech-detection sensitivity, 0-1 (default 0.5). Higher ignores more background noise. */
+  threshold?: number;
+  /** Audio kept from before speech starts, 0-2000 ms (default 300) */
+  prefix_padding_ms?: number;
+  /** Silence that ends the caller's turn, 100-2000 ms (default 200) */
+  silence_duration_ms?: number;
+  /** Silence after which the assistant speaks up again, 0-30000 ms. Off when omitted; 0 turns it off. */
+  idle_timeout_ms?: number;
 }
 
 // --- TTS Config ---
@@ -207,15 +243,75 @@ export interface TTSConfig {
   speed?: number;
   /** ElevenLabs only (0-1) */
   style?: number;
+  /** Google Chirp 3 HD only (0.25-2, default 1) */
+  speaking_rate?: number;
 }
 
 // --- Analysis ---
 
 export interface AnalysisPlan {
+  /** Extract structured data from the transcript after the call */
   structured_data_plan?: {
     enabled: boolean;
-    template_id?: string;
+    /** JSON Schema of the data to extract */
+    schema?: Record<string, unknown>;
+    /** Prompt for the analysis. Placeholders: `{{schema}}`, `{{transcript}}`, `{{ended_reason}}` */
+    messages?: Array<{ role: "system" | "user"; content: string }>;
   };
+  /** Minimum number of conversation messages before the analysis runs (default 2) */
+  min_messages_threshold?: number;
+}
+
+// --- Speech ---
+
+/** Speech behaviour of an assistant. Every part is optional; omitted parts use the platform defaults. */
+export interface SpeechConfig {
+  /** Pipeline assistants only: when the assistant answers, and when it lets itself be interrupted */
+  turn_taking?: {
+    /** Shortest pause before answering, 0.1-5 seconds (default 0.4) */
+    endpointing_min_delay?: number;
+    /** Longest pause before answering anyway, 0.1-5 seconds (default 2). Must not be below the minimum. */
+    endpointing_max_delay?: number;
+    /** How long the caller has to keep talking to interrupt, 0.05-2 seconds (default 0.3) */
+    interruption_min_duration?: number;
+    /** Words the caller has to say to interrupt, 0-10 (default 0, which turns the word count off) */
+    interruption_min_words?: number;
+    /** Seconds before resuming after an interruption that was not speech, 0.2-5 (default 1.5). `null` turns this off. */
+    false_interruption_timeout?: number | null;
+  };
+  /** Pipeline assistants only: literal replacements applied before text is spoken, at most 50 */
+  pronunciation?: Array<{ from: string; to: string }>;
+  /** Ambient sound played under the call */
+  background_audio?: {
+    enabled?: boolean;
+    clip?: "office" | "city" | "forest" | "crowded_room";
+    /** 0.05-1 (default 0.3) */
+    volume?: number;
+  };
+  /** What happens when the caller goes quiet. Used when `autonomous_silence_handling` is on. */
+  silence?: {
+    /** Sentences spoken on successive attempts, at most 5 */
+    messages?: string[];
+    /** Sentence spoken on the last attempt, before the call ends */
+    final_message?: string | null;
+    /** Seconds before the first check, 1-60 (default 3) */
+    first_check_seconds?: number;
+    /** Seconds between attempts, 3-120 (default 12) */
+    interval_seconds?: number;
+    /** Attempts before the call ends, 1-10 (default 3) */
+    max_attempts?: number;
+  };
+  /** Pipeline assistants only: sentence spoken before the assistant ends the call itself */
+  end_call_message?: string | null;
+  /** Opening line for outbound calls. Falls back to `first_message` when empty. */
+  first_message_outbound?: string | null;
+}
+
+/** Ask the caller for consent before the call is processed. Inbound phone calls only. */
+export interface RecordingConsent {
+  enabled: boolean;
+  /** Spoken to the caller, who presses 1 to agree */
+  message: string;
 }
 
 // --- Assistant / Agent ---
@@ -225,6 +321,9 @@ export interface Assistant {
   name: string;
   business_name?: string | null;
   notification_email?: string | null;
+  /** Up to five addresses that receive the end-of-call report */
+  notification_emails?: string[] | null;
+  recording_consent?: RecordingConsent | null;
   first_message?: string | null;
   is_active: boolean;
   max_duration_seconds?: number | null;
@@ -239,7 +338,9 @@ export interface Assistant {
   analysis_plan?: AnalysisPlan | null;
   stt_config: STTConfig;
   llm_config: LLMConfig;
-  tts_config: TTSConfig;
+  /** `null` for a realtime assistant, which speaks by itself */
+  tts_config: TTSConfig | null;
+  speech_config?: SpeechConfig | null;
   created_at: string;
   updated_at: string;
 }
@@ -259,15 +360,20 @@ export interface AssistantCreateParams {
   webhook_url?: string;
   webhook_secret?: string;
   webhook_events?: string[];
+  analysis_plan?: AnalysisPlan;
   stt_config?: STTConfig;
   llm_config?: LLMConfig;
   tts_config?: TTSConfig;
+  speech_config?: SpeechConfig;
 }
 
 export interface AssistantUpdateParams {
   name?: string;
   business_name?: string | null;
   notification_email?: string | null;
+  /** Up to five addresses that receive the end-of-call report */
+  notification_emails?: string[] | null;
+  recording_consent?: RecordingConsent | null;
   first_message?: string | null;
   is_active?: boolean;
   max_duration_seconds?: number | null;
@@ -279,9 +385,11 @@ export interface AssistantUpdateParams {
   webhook_url?: string | null;
   webhook_secret?: string | null;
   webhook_events?: string[] | null;
+  analysis_plan?: AnalysisPlan | null;
   stt_config?: STTConfig;
   llm_config?: LLMConfig;
-  tts_config?: TTSConfig;
+  tts_config?: TTSConfig | null;
+  speech_config?: SpeechConfig | null;
 }
 
 // --- Phone Numbers ---
@@ -583,16 +691,18 @@ export interface WorkflowUpdateParams {
 export type CallStatus = "connecting" | "in-progress" | "ended" | "failed";
 
 export interface CallMessage {
-  role: "user" | "assistant";
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
 export interface Call {
   id: string;
-  caller_phone: string;
-  assistant_phone: string;
+  /** `null` on web calls, and once the organization's metadata retention period has passed */
+  caller_phone?: string | null;
+  /** `null` on web calls */
+  assistant_phone: string | null;
   status: CallStatus;
-  direction?: "inbound" | "outbound";
+  direction?: "inbound" | "outbound" | "web" | null;
   end_reason?: string | null;
   error?: string | null;
   started_at?: string | null;
@@ -747,10 +857,12 @@ export interface XaiRealtimeVoice {
 
 export interface UsageLog {
   id: string;
-  duration_sec?: number;
-  phone_number?: string;
-  agent_name?: string;
-  business_name?: string;
+  duration_sec: number;
+  /** "web" for calls made from a browser, "phone" for all other calls */
+  call_type: "phone" | "web";
+  phone_number: string | null;
+  agent_name: string | null;
+  business_name: string | null;
   created_at: string;
 }
 
@@ -1058,6 +1170,11 @@ export interface Organization {
   children?: OrganizationChild[];
 }
 
+export interface OrganizationGetParams {
+  /** Include the child organizations in `children` */
+  include_children?: boolean;
+}
+
 export interface OrganizationChild {
   id: string;
   name: string;
@@ -1103,12 +1220,16 @@ export interface WebhookCallInfo {
 }
 
 export interface WebhookPhoneNumber {
-  number: string;
-  name?: string;
+  /** `null` on web calls */
+  id: string | null;
+  /** `null` on web calls */
+  number: string | null;
+  name?: string | null;
 }
 
 export interface WebhookCustomer {
-  number: string;
+  /** `null` on web calls */
+  number: string | null;
 }
 
 export interface WebhookBasePayload {
@@ -1132,6 +1253,8 @@ export interface StatusUpdatePayload extends WebhookBasePayload {
   message: WebhookBasePayload["message"] & {
     type: "status-update";
     error?: string;
+    /** Why the call ended. Present once the call has ended. */
+    end_reason?: string;
   };
 }
 
@@ -1153,6 +1276,10 @@ export interface EndOfCallReportPayload extends WebhookBasePayload {
   message: WebhookBasePayload["message"] & {
     type: "end-of-call-report";
     duration_seconds: number;
+    /** Why the call ended, such as "user_hangup" or "max_duration" */
+    end_reason?: string;
+    started_at?: string;
+    ended_at?: string;
     summary: string;
     messages: CallMessage[];
     analysis?: Record<string, unknown>;
