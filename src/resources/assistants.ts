@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type { Assistant, AssistantCreateParams, AssistantUpdateParams } from "../types";
 
 export class Assistants {
@@ -17,7 +18,7 @@ export class Assistants {
   async get(id: string): Promise<Assistant> {
     const res = await this.client.request<{ assistant: Assistant }>({
       method: "GET",
-      path: `/assistants/${id}`,
+      path: `/assistants/${encodePathParam(id)}`,
     });
     return res.assistant;
   }
@@ -36,7 +37,7 @@ export class Assistants {
   async update(id: string, params: AssistantUpdateParams): Promise<Assistant> {
     const res = await this.client.request<{ assistant: Assistant }>({
       method: "PATCH",
-      path: `/assistants/${id}`,
+      path: `/assistants/${encodePathParam(id)}`,
       body: params,
     });
     return res.assistant;
@@ -46,7 +47,7 @@ export class Assistants {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/assistants/${id}`,
+      path: `/assistants/${encodePathParam(id)}`,
     });
   }
 }

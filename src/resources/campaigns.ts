@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type {
   Campaign,
   CampaignCreateParams,
@@ -23,7 +24,7 @@ export class Campaigns {
   async get(id: string): Promise<Campaign> {
     const res = await this.client.request<{ campaign: Campaign }>({
       method: "GET",
-      path: `/campaigns/${id}`,
+      path: `/campaigns/${encodePathParam(id)}`,
     });
     return res.campaign;
   }
@@ -42,7 +43,7 @@ export class Campaigns {
   async update(id: string, params: CampaignUpdateParams): Promise<Campaign> {
     const res = await this.client.request<{ campaign: Campaign }>({
       method: "PATCH",
-      path: `/campaigns/${id}`,
+      path: `/campaigns/${encodePathParam(id)}`,
       body: params,
     });
     return res.campaign;
@@ -52,7 +53,7 @@ export class Campaigns {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/campaigns/${id}`,
+      path: `/campaigns/${encodePathParam(id)}`,
     });
   }
 
@@ -60,7 +61,7 @@ export class Campaigns {
   async listLeads(campaignId: string): Promise<CampaignLead[]> {
     const res = await this.client.request<{ leads: CampaignLead[] }>({
       method: "GET",
-      path: `/campaigns/${campaignId}/leads`,
+      path: `/campaigns/${encodePathParam(campaignId)}/leads`,
     });
     return res.leads;
   }
@@ -69,7 +70,7 @@ export class Campaigns {
   async addLead(campaignId: string, params: CampaignLeadCreateParams): Promise<CampaignLead> {
     const res = await this.client.request<{ lead: CampaignLead }>({
       method: "POST",
-      path: `/campaigns/${campaignId}/leads`,
+      path: `/campaigns/${encodePathParam(campaignId)}/leads`,
       body: params,
     });
     return res.lead;
@@ -79,7 +80,7 @@ export class Campaigns {
   async removeLead(campaignId: string, leadId: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/campaigns/${campaignId}/leads/${leadId}`,
+      path: `/campaigns/${encodePathParam(campaignId)}/leads/${encodePathParam(leadId)}`,
     });
   }
 }

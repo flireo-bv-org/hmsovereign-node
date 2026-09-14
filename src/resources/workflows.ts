@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type { Workflow, WorkflowCreateParams, WorkflowSummary, WorkflowUpdateParams } from "../types";
 
 export class Workflows {
@@ -22,7 +23,7 @@ export class Workflows {
   async get(id: string): Promise<Workflow> {
     const res = await this.client.request<{ workflow: Workflow }>({
       method: "GET",
-      path: `/workflows/${id}`,
+      path: `/workflows/${encodePathParam(id)}`,
     });
     return res.workflow;
   }
@@ -49,7 +50,7 @@ export class Workflows {
   async update(id: string, params: WorkflowUpdateParams): Promise<Workflow> {
     const res = await this.client.request<{ workflow: Workflow }>({
       method: "PATCH",
-      path: `/workflows/${id}`,
+      path: `/workflows/${encodePathParam(id)}`,
       body: params,
     });
     return res.workflow;
@@ -65,7 +66,7 @@ export class Workflows {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/workflows/${id}`,
+      path: `/workflows/${encodePathParam(id)}`,
     });
   }
 }

@@ -7,6 +7,19 @@ import {
   RateLimitError,
 } from "./errors";
 
+/**
+ * Encodes a value as a single path segment, so an id can never change which
+ * endpoint a request goes to. "", "." and ".." are rejected, because a URL
+ * resolves them against the surrounding path instead of keeping them.
+ */
+export function encodePathParam(value: string): string {
+  const segment = String(value);
+  if (segment === "" || segment === "." || segment === "..") {
+    throw new TypeError(`Invalid path parameter: ${JSON.stringify(segment)}`);
+  }
+  return encodeURIComponent(segment);
+}
+
 export interface ClientOptions {
   apiKey: string;
   baseUrl?: string;

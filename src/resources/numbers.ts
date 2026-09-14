@@ -1,4 +1,5 @@
 import type { HttpClient } from "../client";
+import { encodePathParam } from "../client";
 import type { PhoneNumber, PhoneNumberCreateParams, PhoneNumberUpdateParams } from "../types";
 
 export class Numbers {
@@ -17,7 +18,7 @@ export class Numbers {
   async get(id: string): Promise<PhoneNumber> {
     const res = await this.client.request<{ number: PhoneNumber }>({
       method: "GET",
-      path: `/numbers/${id}`,
+      path: `/numbers/${encodePathParam(id)}`,
     });
     return res.number;
   }
@@ -36,7 +37,7 @@ export class Numbers {
   async update(id: string, params: PhoneNumberUpdateParams): Promise<PhoneNumber> {
     const res = await this.client.request<{ number: PhoneNumber }>({
       method: "PATCH",
-      path: `/numbers/${id}`,
+      path: `/numbers/${encodePathParam(id)}`,
       body: params,
     });
     return res.number;
@@ -46,7 +47,7 @@ export class Numbers {
   async delete(id: string): Promise<void> {
     await this.client.request<{ success: boolean }>({
       method: "DELETE",
-      path: `/numbers/${id}`,
+      path: `/numbers/${encodePathParam(id)}`,
     });
   }
 }
