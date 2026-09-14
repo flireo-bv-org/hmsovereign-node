@@ -49,7 +49,7 @@
   },
   "homepage": "https://doc.voicedock.ai/docs/sdks/node",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

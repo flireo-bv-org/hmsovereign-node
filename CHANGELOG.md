@@ -20,6 +20,10 @@ All notable changes to this package are documented in this file. The format is b
 - The package exports separate type definitions for `import` and `require`, so ESM projects resolve the ESM types.
 - The `User-Agent` header reports the installed package version.
 
+### Removed
+
+- Support for Node.js 20, which reached end of life on 30 April 2026. The package requires Node.js 22 or later.
+
 ## [1.0.1] - 2026-03-24
 
 ### Changed
