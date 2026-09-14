@@ -11,11 +11,16 @@ export interface Pagination {
   offset: number;
 }
 
+/** The error body the API returns. */
 export interface ApiError {
+  /** What went wrong */
   error: string;
+  /** A longer explanation, sent with some errors */
   message?: string;
-  param?: string;
-  type?: string;
+  /** One entry per problem, sent with some validation errors */
+  details?: string[];
+  /** Some errors carry more fields, such as `retry_after` on a 429 */
+  [key: string]: unknown;
 }
 
 // --- Providers ---
