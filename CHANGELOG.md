@@ -18,6 +18,10 @@ All notable changes to this package are documented in this file. The format is b
 - `organizations.create()` returns `OrganizationCreated`, which includes the API key issued for the new organization.
 - `OrganizationCreateParams` drops `email` and adds `parent_org_id`.
 
+### Removed
+
+- Support for Node.js 20, which reached end of life on 30 April 2026. The package requires Node.js 22 or later.
+
 ## [1.0.1] - 2026-03-24
 
 ### Changed

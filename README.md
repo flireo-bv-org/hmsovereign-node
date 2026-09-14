@@ -10,7 +10,7 @@ The official Node.js and TypeScript SDK for [VoiceDock](https://voicedock.ai), p
 npm install hmsovereign
 ```
 
-Requires Node.js 20 or later. The package has no runtime dependencies.
+Requires Node.js 22 or later. The package has no runtime dependencies.
 
 ## Quick start
 
