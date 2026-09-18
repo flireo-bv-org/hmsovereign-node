@@ -47,7 +47,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/flireo-bv-org/hmsovereign-node"
+    "url": "git+https://github.com/flireo-bv-org/hmsovereign-node.git"
   },
   "homepage": "https://doc.voicedock.ai/docs/sdks/node",
   "engines": {
