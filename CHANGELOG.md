@@ -4,7 +4,7 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-09-15
+## [2.0.0] - 2026-09-18
 
 This release contains breaking changes. See Changed and Removed.
 
