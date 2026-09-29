@@ -203,7 +203,18 @@ export interface LLMConfig {
   /** `xai_realtime` only: server-side turn detection. Omitted fields use the provider default. */
   turn_detection?: XAITurnDetection;
   messages?: LLMMessage[];
-  tools?: ToolDefinition[];
+  tools?: Array<ToolDefinition | McpToolDefinition>;
+}
+
+/** Attaches an MCP server to the assistant, with the server's tools it may use. */
+export interface McpToolDefinition {
+  type: "mcp";
+  /** The `id` of an MCP server in your organization */
+  mcp_server_id: string;
+  /** The server's tools the assistant may use, by name. At most 25. */
+  allowed_tools: string[];
+  /** Reject the call when the server cannot be reached. Defaults to `true`. */
+  required?: boolean;
 }
 
 /** Backend model of an `openai_live` assistant. */
@@ -941,6 +952,64 @@ export interface BYOKConfigParams {
   /** Provider-specific settings, merged into the settings already stored for this provider. */
   config: Record<string, unknown>;
 }
+
+// --- MCP Servers ---
+
+export type McpServerTransport = "streamable_http" | "sse";
+
+export interface McpServer {
+  /** Use it as `mcp_server_id` in a tool of type `mcp` */
+  id: string;
+  /** Display name, unique within your organization */
+  name: string;
+  /** The server's endpoint. Always `https://`, stored in its normalized form. */
+  url: string;
+  transport: McpServerTransport;
+  /** The names of the headers sent with every request. The values are never returned. */
+  header_names: string[];
+  /** How long the platform waits for the server on each request, including a tool call */
+  timeout_seconds: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface McpServerCreateParams {
+  name: string;
+  /** Must use `https://` and resolve to a public address. Put credentials in `headers`. */
+  url: string;
+  /** Defaults to `streamable_http`. Use `sse` only for a server that offers nothing else. */
+  transport?: McpServerTransport;
+  /** Sent with every request to the server, such as an API key. At most 10. */
+  headers?: Record<string, string>;
+  /** 5 to 60 seconds. Defaults to 20. */
+  timeout_seconds?: number;
+}
+
+export interface McpServerUpdateParams {
+  name?: string;
+  /** On a different host than before, send `headers` in the same call. */
+  url?: string;
+  transport?: McpServerTransport;
+  /** Replaces all stored headers. `{}` removes them. */
+  headers?: Record<string, string>;
+  timeout_seconds?: number;
+}
+
+export interface McpServerTestParams {
+  /** Merged over the stored headers for this test only; not stored */
+  headers?: Record<string, string>;
+}
+
+export interface McpServerTool {
+  name: string;
+  description: string | null;
+  /** The tool's parameters as JSON Schema */
+  input_schema: Record<string, unknown>;
+}
+
+export type McpServerTestResult =
+  | { ok: true; duration_ms: number; tools: McpServerTool[] }
+  | { ok: false; duration_ms: number; error: string };
 
 // --- Tool Templates ---
 

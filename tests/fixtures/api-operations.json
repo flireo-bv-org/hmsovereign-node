@@ -23,10 +23,14 @@
     },
     {
       "operation": "DELETE /chats/{}",
-      "deprecated": false
+      "deprecated": true
     },
     {
       "operation": "DELETE /domains",
+      "deprecated": false
+    },
+    {
+      "operation": "DELETE /mcp-servers/{}",
       "deprecated": false
     },
     {
@@ -91,11 +95,11 @@
     },
     {
       "operation": "GET /chats",
-      "deprecated": false
+      "deprecated": true
     },
     {
       "operation": "GET /chats/context",
-      "deprecated": false
+      "deprecated": true
     },
     {
       "operation": "GET /domains",
@@ -107,6 +111,14 @@
     },
     {
       "operation": "GET /health",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /mcp-servers",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /mcp-servers/{}",
       "deprecated": false
     },
     {
@@ -166,6 +178,10 @@
       "deprecated": false
     },
     {
+      "operation": "PATCH /mcp-servers/{}",
+      "deprecated": false
+    },
+    {
       "operation": "PATCH /numbers/{}",
       "deprecated": false
     },
@@ -215,7 +231,7 @@
     },
     {
       "operation": "POST /chats",
-      "deprecated": false
+      "deprecated": true
     },
     {
       "operation": "POST /domains",
@@ -231,6 +247,14 @@
     },
     {
       "operation": "POST /domains/verify",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /mcp-servers",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /mcp-servers/{}/test",
       "deprecated": false
     },
     {

@@ -8,6 +8,7 @@ import { BYOK } from "../src/resources/byok";
 import { Calls } from "../src/resources/calls";
 import { Campaigns } from "../src/resources/campaigns";
 import { Domains } from "../src/resources/domains";
+import { McpServers } from "../src/resources/mcp-servers";
 import { Numbers } from "../src/resources/numbers";
 import { Organizations } from "../src/resources/organizations";
 import { SipTrunks } from "../src/resources/sip-trunks";
@@ -33,6 +34,7 @@ const RESOURCES = [
   Calls,
   Campaigns,
   Domains,
+  McpServers,
   Numbers,
   Organizations,
   SipTrunks,

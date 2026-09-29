@@ -9,6 +9,7 @@ import { Voices } from "../src/resources/voices";
 import { Usage } from "../src/resources/usage";
 import { BYOK } from "../src/resources/byok";
 import { ToolTemplates } from "../src/resources/tool-templates";
+import { McpServers } from "../src/resources/mcp-servers";
 import { AnalysisTemplates } from "../src/resources/analysis-templates";
 import { Campaigns } from "../src/resources/campaigns";
 import { Domains } from "../src/resources/domains";
@@ -814,5 +815,93 @@ describe("Workflows delete conflict", () => {
     expect((error as ApiRequestError).message).toBe(message);
     // Not retried: a 409 is the caller's problem, not a transient failure.
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ─── MCP Servers ─────────────────────────────────────────────────────────────
+
+describe("McpServers", () => {
+  const server = {
+    id: "m1",
+    name: "Mailbox",
+    url: "https://mcp.example.com/mcp",
+    transport: "streamable_http",
+    header_names: ["Authorization"],
+    timeout_seconds: 20,
+    created_at: "2026-10-01T10:00:00Z",
+    updated_at: "2026-10-01T10:00:00Z",
+  };
+
+  it("list() unwraps { mcp_servers }", async () => {
+    mock.onRequest("GET", "/mcp-servers", { mcp_servers: [server] });
+
+    const result = await new McpServers(mock as any).list();
+
+    expect(result[0].header_names).toEqual(["Authorization"]);
+  });
+
+  it("get() unwraps { mcp_server }", async () => {
+    mock.onRequest("GET", "/mcp-servers/m1", { mcp_server: server });
+
+    const result = await new McpServers(mock as any).get("m1");
+
+    expect(result.id).toBe("m1");
+  });
+
+  it("create() sends the headers and unwraps { mcp_server }", async () => {
+    const params = {
+      name: "Mailbox",
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: "Bearer token" },
+    };
+    mock.onRequest("POST", "/mcp-servers", { mcp_server: server });
+
+    const result = await new McpServers(mock as any).create(params);
+
+    expect(mock.lastRequest).toMatchObject({ method: "POST", path: "/mcp-servers" });
+    expect(mock.lastRequest.body).toEqual(params);
+    expect(result.name).toBe("Mailbox");
+  });
+
+  it("update() calls PATCH /mcp-servers/:id with the url and new headers together", async () => {
+    const params = { url: "https://mcp.other.example/mcp", headers: { Authorization: "Bearer new" } };
+    mock.onRequest("PATCH", "/mcp-servers/m1", { mcp_server: { ...server, url: params.url } });
+
+    const result = await new McpServers(mock as any).update("m1", params);
+
+    expect(mock.lastRequest).toMatchObject({ method: "PATCH", path: "/mcp-servers/m1" });
+    expect(mock.lastRequest.body).toEqual(params);
+    expect(result.url).toBe(params.url);
+  });
+
+  it("delete() calls DELETE /mcp-servers/:id", async () => {
+    mock.onRequest("DELETE", "/mcp-servers/m1", { success: true });
+
+    await new McpServers(mock as any).delete("m1");
+
+    expect(mock.lastRequest).toMatchObject({ method: "DELETE", path: "/mcp-servers/m1" });
+  });
+
+  it("test() returns the tools, and sends headers only when given", async () => {
+    const outcome = {
+      ok: true,
+      duration_ms: 412,
+      tools: [{ name: "search_mail", description: "Search the mailbox", input_schema: { type: "object" } }],
+    };
+    mock.onRequest("POST", "/mcp-servers/m1/test", outcome);
+    const servers = new McpServers(mock as any);
+
+    const result = await servers.test("m1");
+    expect(mock.lastRequest.body).toBeUndefined();
+    expect(result.ok ? result.tools[0].name : undefined).toBe("search_mail");
+
+    await servers.test("m1", { headers: { Authorization: "Bearer caller" } });
+    expect(mock.lastRequest.body).toEqual({ headers: { Authorization: "Bearer caller" } });
+  });
+
+  it("is available on the client", () => {
+    const client = new HMSSovereign({ apiKey: "test" });
+
+    expect(client.mcpServers).toBeInstanceOf(McpServers);
   });
 });
