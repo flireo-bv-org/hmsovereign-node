@@ -4,6 +4,8 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-30
+
 ### Added
 
 - `client.mcpServers` with `list`, `create`, `get`, `update`, `delete` and `test`, to manage the MCP servers whose tools your assistants use during a call. Header values are write-only and never returned; `header_names` shows which are set.
@@ -87,7 +89,8 @@ This release contains breaking changes. See Changed and Removed.
 - Automatic retries with exponential backoff on 5xx and 429 responses.
 - Webhook signature verification.
 
-[Unreleased]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/flireo-bv-org/hmsovereign-node/releases/tag/v1.0.0
