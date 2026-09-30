@@ -251,13 +251,13 @@ export interface TTSConfig {
   language?: string;
   /** ElevenLabs only (0-1) */
   stability?: number;
-  /** ElevenLabs only (0-1) */
+  /** ElevenLabs only (0-1). Not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   similarity_boost?: number;
-  /** ElevenLabs only */
+  /** ElevenLabs only. Not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   use_speaker_boost?: boolean;
-  /** Both providers (0.5-2) */
+  /** Both providers (0.5-2). On ElevenLabs: not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   speed?: number;
-  /** ElevenLabs only (0-1) */
+  /** ElevenLabs only (0-1). Not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   style?: number;
   /** Google Chirp 3 HD only (0.25-2, default 1) */
   speaking_rate?: number;
@@ -321,6 +321,13 @@ export interface SpeechConfig {
   end_call_message?: string | null;
   /** Opening line for outbound calls. Falls back to `first_message` when empty. */
   first_message_outbound?: string | null;
+  /**
+   * Closing phrases: when one of the assistant's turns ends with one of these sentences, the platform
+   * ends the call itself, once the sentence has been spoken. Capitals and punctuation are ignored.
+   * At most 5 sentences of up to 100 characters, each with at least 2 letters or digits.
+   * Works on pipeline and speech-to-speech assistants.
+   */
+  end_call_phrases?: string[] | null;
 }
 
 /** Ask the caller for consent before the call is processed. Inbound phone calls only. */

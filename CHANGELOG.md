@@ -9,10 +9,12 @@ All notable changes to this package are documented in this file. The format is b
 - `client.mcpServers` with `list`, `create`, `get`, `update`, `delete` and `test`, to manage the MCP servers whose tools your assistants use during a call. Header values are write-only and never returned; `header_names` shows which are set.
 - `McpToolDefinition`, to attach an MCP server to an assistant with a tool of type `mcp` in `llm_config.tools`, naming the tools it may use in `allowed_tools`.
 - New exported types: `McpServer`, `McpServerCreateParams`, `McpServerUpdateParams`, `McpServerTestParams`, `McpServerTestResult`, `McpServerTool`, `McpServerTransport` and `McpToolDefinition`.
+- `SpeechConfig.end_call_phrases`: the sentences after which the platform ends the call itself.
 
 ### Changed
 
 - `LLMConfig.tools` accepts `McpToolDefinition` next to `ToolDefinition`.
+- The descriptions of `similarity_boost`, `use_speaker_boost`, `speed` and `style` on `TTSConfig` state that the API refuses them on `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`. The type itself is unchanged.
 
 ## [2.0.0] - 2026-09-18
 
