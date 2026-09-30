@@ -13,6 +13,8 @@ import type {
   EndOfCallReportPayload,
   LLMConfig,
   LeadStatus,
+  McpServerTestResult,
+  McpToolDefinition,
   OrganizationGetParams,
   RealtimeLLMProvider,
   STTProvider,
@@ -218,5 +220,28 @@ describe("workflow response optionality", () => {
     const summary: WorkflowSummary = {};
     expectTypeOf(summary.node_count).toEqualTypeOf<number | undefined>();
     expectTypeOf(summary.entry_node).toEqualTypeOf<string | null | undefined>();
+  });
+});
+
+describe("MCP servers", () => {
+  it("attaches a server to an assistant as a tool of type mcp", () => {
+    const tool: McpToolDefinition = {
+      type: "mcp",
+      mcp_server_id: "2f1c9a7e-4b3d-4e8a-9c21-6d5f0b7a8e13",
+      allowed_tools: ["search_mail"],
+    };
+    const config: LLMConfig = { provider: "openai", model: "gpt-5.4-mini", tools: [tool] };
+    expectTypeOf(config.tools).not.toBeUndefined();
+    // allowed_tools is required: a server is never attached without naming its tools.
+    expectTypeOf<{ type: "mcp"; mcp_server_id: string }>().not.toExtend<McpToolDefinition>();
+  });
+
+  it("narrows a test result on ok", () => {
+    const result = {} as McpServerTestResult;
+    if (result.ok) {
+      expectTypeOf(result.tools[0].description).toEqualTypeOf<string | null>();
+    } else {
+      expectTypeOf(result.error).toEqualTypeOf<string>();
+    }
   });
 });

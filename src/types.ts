@@ -203,7 +203,18 @@ export interface LLMConfig {
   /** `xai_realtime` only: server-side turn detection. Omitted fields use the provider default. */
   turn_detection?: XAITurnDetection;
   messages?: LLMMessage[];
-  tools?: ToolDefinition[];
+  tools?: Array<ToolDefinition | McpToolDefinition>;
+}
+
+/** Attaches an MCP server to the assistant, with the server's tools it may use. */
+export interface McpToolDefinition {
+  type: "mcp";
+  /** The `id` of an MCP server in your organization */
+  mcp_server_id: string;
+  /** The server's tools the assistant may use, by name. At most 25. */
+  allowed_tools: string[];
+  /** Reject the call when the server cannot be reached. Defaults to `true`. */
+  required?: boolean;
 }
 
 /** Backend model of an `openai_live` assistant. */
@@ -240,13 +251,13 @@ export interface TTSConfig {
   language?: string;
   /** ElevenLabs only (0-1) */
   stability?: number;
-  /** ElevenLabs only (0-1) */
+  /** ElevenLabs only (0-1). Not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   similarity_boost?: number;
-  /** ElevenLabs only */
+  /** ElevenLabs only. Not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   use_speaker_boost?: boolean;
-  /** Both providers (0.5-2) */
+  /** Both providers (0.5-2). On ElevenLabs: not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   speed?: number;
-  /** ElevenLabs only (0-1) */
+  /** ElevenLabs only (0-1). Not used by `eleven_v3`, `eleven_v4` and `eleven_v4_turbo`; the API refuses it there. */
   style?: number;
   /** Google Chirp 3 HD only (0.25-2, default 1) */
   speaking_rate?: number;
@@ -310,6 +321,13 @@ export interface SpeechConfig {
   end_call_message?: string | null;
   /** Opening line for outbound calls. Falls back to `first_message` when empty. */
   first_message_outbound?: string | null;
+  /**
+   * Closing phrases: when one of the assistant's turns ends with one of these sentences, the platform
+   * ends the call itself, once the sentence has been spoken. Capitals and punctuation are ignored.
+   * At most 5 sentences of up to 100 characters, each with at least 2 letters or digits.
+   * Works on pipeline and speech-to-speech assistants.
+   */
+  end_call_phrases?: string[] | null;
 }
 
 /** Ask the caller for consent before the call is processed. Inbound phone calls only. */
@@ -941,6 +959,64 @@ export interface BYOKConfigParams {
   /** Provider-specific settings, merged into the settings already stored for this provider. */
   config: Record<string, unknown>;
 }
+
+// --- MCP Servers ---
+
+export type McpServerTransport = "streamable_http" | "sse";
+
+export interface McpServer {
+  /** Use it as `mcp_server_id` in a tool of type `mcp` */
+  id: string;
+  /** Display name, unique within your organization */
+  name: string;
+  /** The server's endpoint. Always `https://`, stored in its normalized form. */
+  url: string;
+  transport: McpServerTransport;
+  /** The names of the headers sent with every request. The values are never returned. */
+  header_names: string[];
+  /** How long the platform waits for the server on each request, including a tool call */
+  timeout_seconds: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface McpServerCreateParams {
+  name: string;
+  /** Must use `https://` and resolve to a public address. Put credentials in `headers`. */
+  url: string;
+  /** Defaults to `streamable_http`. Use `sse` only for a server that offers nothing else. */
+  transport?: McpServerTransport;
+  /** Sent with every request to the server, such as an API key. At most 10. */
+  headers?: Record<string, string>;
+  /** 5 to 60 seconds. Defaults to 20. */
+  timeout_seconds?: number;
+}
+
+export interface McpServerUpdateParams {
+  name?: string;
+  /** On a different host than before, send `headers` in the same call. */
+  url?: string;
+  transport?: McpServerTransport;
+  /** Replaces all stored headers. `{}` removes them. */
+  headers?: Record<string, string>;
+  timeout_seconds?: number;
+}
+
+export interface McpServerTestParams {
+  /** Merged over the stored headers for this test only; not stored */
+  headers?: Record<string, string>;
+}
+
+export interface McpServerTool {
+  name: string;
+  description: string | null;
+  /** The tool's parameters as JSON Schema */
+  input_schema: Record<string, unknown>;
+}
+
+export type McpServerTestResult =
+  | { ok: true; duration_ms: number; tools: McpServerTool[] }
+  | { ok: false; duration_ms: number; error: string };
 
 // --- Tool Templates ---
 

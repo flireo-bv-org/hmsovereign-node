@@ -9,6 +9,7 @@ import { Voices } from "./resources/voices";
 import { Usage } from "./resources/usage";
 import { BYOK } from "./resources/byok";
 import { ToolTemplates } from "./resources/tool-templates";
+import { McpServers } from "./resources/mcp-servers";
 import { AnalysisTemplates } from "./resources/analysis-templates";
 import { Domains } from "./resources/domains";
 import { Organizations } from "./resources/organizations";
@@ -24,6 +25,7 @@ export class HMSSovereign {
   readonly usage: Usage;
   readonly byok: BYOK;
   readonly toolTemplates: ToolTemplates;
+  readonly mcpServers: McpServers;
   readonly analysisTemplates: AnalysisTemplates;
   readonly domains: Domains;
   readonly organizations: Organizations;
@@ -41,6 +43,7 @@ export class HMSSovereign {
     this.usage = new Usage(client);
     this.byok = new BYOK(client);
     this.toolTemplates = new ToolTemplates(client);
+    this.mcpServers = new McpServers(client);
     this.analysisTemplates = new AnalysisTemplates(client);
     this.domains = new Domains(client);
     this.organizations = new Organizations(client);
@@ -87,6 +90,7 @@ export type {
   LLMMessage,
   LLMConfig,
   ToolDefinition,
+  McpToolDefinition,
 
   // TTS
   TTSProvider,
@@ -147,6 +151,14 @@ export type {
   BYOKConfig,
   BYOKConfigParams,
 
+  // MCP Servers
+  McpServer,
+  McpServerCreateParams,
+  McpServerTestParams,
+  McpServerTestResult,
+  McpServerTool,
+  McpServerTransport,
+  McpServerUpdateParams,
   // Tool Templates
   ToolTemplate,
   ToolTemplateType,
