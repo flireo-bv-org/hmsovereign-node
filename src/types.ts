@@ -58,7 +58,7 @@ export const LLM_PROVIDERS = [...TEXT_LLM_PROVIDERS, ...REALTIME_LLM_PROVIDERS] 
 export type LLMProvider = (typeof LLM_PROVIDERS)[number];
 
 /** Text-to-speech providers (catalog section `tts`). */
-export const TTS_PROVIDERS = ["elevenlabs", "inworld", "google", "xai"] as const;
+export const TTS_PROVIDERS = ["elevenlabs", "inworld", "google", "xai", "voicedock"] as const;
 
 export type TTSProvider = (typeof TTS_PROVIDERS)[number];
 
@@ -245,7 +245,7 @@ export interface XAITurnDetection {
 export interface TTSConfig {
   provider: TTSProvider;
   voice_id: string;
-  /** ElevenLabs only */
+  /** ElevenLabs, Google and VoiceDock (`voicedock-1`) */
   model?: string;
   /** Inworld only */
   language?: string;

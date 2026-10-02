@@ -4,6 +4,16 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-10-02
+
+### Added
+
+- `voicedock` as a `TTSProvider`: VoiceDock's own voice, in beta. It runs on VoiceDock's own servers in the EU and needs no key. Use it with `voice_id: "voicedock"` and `model: "voicedock-1"`.
+
+### Changed
+
+- The description of `TTSConfig.model` names every provider that uses it. The type itself is unchanged.
+
 ## [2.1.0] - 2026-09-30
 
 ### Added

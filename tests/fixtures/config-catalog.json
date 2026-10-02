@@ -53,7 +53,9 @@
           "gpt-4o-mini"
         ],
         "legacy_models": [
-          "gpt-4o-mini"
+          "gpt-4o-mini",
+          "gpt-4.1-nano",
+          "gpt-5-nano"
         ],
         "pricing": {
           "type": "llm",
@@ -164,7 +166,8 @@
         "models": [
           "gemini-live-2.5-flash-native-audio",
           "gemini-2.5-flash-native-audio-preview-12-2025",
-          "gemini-3.1-flash-live-preview"
+          "gemini-3.1-flash-live-preview",
+          "gemini-3.8-live"
         ],
         "legacy_models": [
           "gemini-2.5-flash-native-audio-preview-12-2025"
@@ -172,7 +175,8 @@
         "model_requires": {
           "gemini-live-2.5-flash-native-audio": "google_vertex_secret_id",
           "gemini-2.5-flash-native-audio-preview-12-2025": "google_secret_id",
-          "gemini-3.1-flash-live-preview": "google_secret_id"
+          "gemini-3.1-flash-live-preview": "google_secret_id",
+          "gemini-3.8-live": "google_secret_id"
         },
         "pricing": {
           "type": "realtime",
@@ -223,14 +227,7 @@
         "default_model": "grok-voice-think-fast-2.0",
         "postcall_model": "grok-4.3",
         "models": [
-          "grok-voice-think-fast-2.0",
-          "grok-voice-think-fast-1.0",
-          "grok-voice-latest",
-          "grok-realtime-v1"
-        ],
-        "legacy_models": [
-          "grok-voice-latest",
-          "grok-realtime-v1"
+          "grok-voice-think-fast-2.0"
         ],
         "pricing": {
           "type": "realtime",
@@ -448,6 +445,138 @@
       "vi": "vi-VN"
     }
   },
+  "postcall_stt": {
+    "applies_to": "realtime",
+    "providers": [
+      {
+        "id": "elevenlabs",
+        "label": "ElevenLabs Scribe",
+        "byok_secret": "elevenlabs_secret_id",
+        "default_model": "scribe_v2",
+        "models": [
+          "scribe_v2"
+        ],
+        "pricing": {
+          "type": "stt",
+          "units": [
+            "per_hour"
+          ]
+        }
+      },
+      {
+        "id": "deepgram",
+        "label": "Deepgram",
+        "byok_secret": "deepgram_secret_id",
+        "default_model": "nova-3",
+        "models": [
+          "nova-3",
+          "nova-3-general"
+        ],
+        "pricing": {
+          "type": "stt",
+          "units": [
+            "per_minute_batch"
+          ]
+        }
+      }
+    ]
+  },
+  "postcall_llm": {
+    "applies_to": "both",
+    "providers": [
+      {
+        "id": "openai",
+        "label": "OpenAI",
+        "byok_secret": "openai_secret_id",
+        "default_model": "gpt-5.4-mini",
+        "models": [
+          "gpt-5.4",
+          "gpt-5.4-mini",
+          "gpt-5.4-nano",
+          "gpt-5.2",
+          "gpt-5.1",
+          "gpt-5",
+          "gpt-5-mini",
+          "gpt-5-nano",
+          "gpt-4.1",
+          "gpt-4.1-mini",
+          "gpt-4.1-nano",
+          "gpt-5.6-luna",
+          "gpt-5.6-terra",
+          "gpt-5.6-sol",
+          "gpt-4o-mini"
+        ],
+        "legacy_models": [
+          "gpt-4o-mini",
+          "gpt-4.1-nano",
+          "gpt-5-nano"
+        ],
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        }
+      },
+      {
+        "id": "xai",
+        "label": "xAI",
+        "byok_secret": "xai_secret_id",
+        "default_model": "grok-4.3",
+        "models": [
+          "grok-4.3"
+        ],
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        }
+      },
+      {
+        "id": "mistral",
+        "label": "Mistral",
+        "byok_secret": "mistral_secret_id",
+        "default_model": "mistral-medium-latest",
+        "models": [
+          "mistral-medium-latest",
+          "mistral-small-latest",
+          "mistral-large-latest",
+          "ministral-8b-latest",
+          "ministral-14b-latest",
+          "ministral-3b-latest"
+        ],
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        }
+      },
+      {
+        "id": "google",
+        "label": "Google",
+        "byok_secret": "google_vertex_secret_id",
+        "default_model": "gemini-2.5-flash-lite",
+        "models": [
+          "gemini-3.5-flash-lite",
+          "gemini-3.5-flash",
+          "gemini-2.5-flash-lite",
+          "gemini-2.5-flash"
+        ],
+        "pricing": {
+          "type": "llm",
+          "units": [
+            "per_1m_input_tokens",
+            "per_1m_output_tokens"
+          ]
+        }
+      }
+    ]
+  },
   "tts": {
     "aliases": {
       "11labs": "elevenlabs"
@@ -460,6 +589,8 @@
         "default_model": "eleven_flash_v2_5",
         "models": [
           "eleven_flash_v2_5",
+          "eleven_v4_turbo",
+          "eleven_v4",
           "eleven_v3",
           "eleven_multilingual_v2",
           "eleven_turbo_v2_5"
@@ -470,7 +601,30 @@
             "per_1k_chars"
           ]
         },
-        "voice_id": "free"
+        "voice_id": "free",
+        "settings": [
+          "stability",
+          "similarity_boost",
+          "style",
+          "speed",
+          "use_speaker_boost",
+          "apply_text_normalization",
+          "apply_language_text_normalization"
+        ],
+        "model_settings": {
+          "eleven_v4_turbo": [
+            "stability",
+            "apply_text_normalization"
+          ],
+          "eleven_v4": [
+            "stability",
+            "apply_text_normalization"
+          ],
+          "eleven_v3": [
+            "stability",
+            "apply_text_normalization"
+          ]
+        }
       },
       {
         "id": "inworld",
@@ -605,6 +759,25 @@
           "zagan",
           "zenith"
         ]
+      },
+      {
+        "id": "voicedock",
+        "label": "VoiceDock (beta)",
+        "default_model": "voicedock-1",
+        "models": [
+          "voicedock-1"
+        ],
+        "pricing": {
+          "type": "tts",
+          "units": [
+            "per_1m_chars"
+          ]
+        },
+        "default_voice": "voicedock",
+        "voice_id": "enum",
+        "voices": [
+          "voicedock"
+        ]
       }
     ]
   },
@@ -694,7 +867,8 @@
         "background_audio": "both",
         "silence": "both",
         "end_call_message": "pipeline",
-        "first_message_outbound": "both"
+        "first_message_outbound": "both",
+        "end_call_phrases": "both"
       },
       "turn_taking": {
         "endpointing_min_delay": {
@@ -783,6 +957,11 @@
       },
       "first_message_outbound": {
         "max_length": 300
+      },
+      "end_call_phrases": {
+        "max_items": 5,
+        "max_length": 100,
+        "min_letters_or_digits": 2
       }
     }
   },
@@ -1051,7 +1230,8 @@
               "enum": [
                 "gemini-live-2.5-flash-native-audio",
                 "gemini-2.5-flash-native-audio-preview-12-2025",
-                "gemini-3.1-flash-live-preview"
+                "gemini-3.1-flash-live-preview",
+                "gemini-3.8-live"
               ]
             },
             "voice": {
@@ -1098,7 +1278,8 @@
               "type": "string"
             },
             "analysis_model": {
-              "type": "string"
+              "type": "string",
+              "deprecated": true
             },
             "max_output_tokens": {
               "type": "integer",
@@ -1155,10 +1336,7 @@
             "model": {
               "type": "string",
               "enum": [
-                "grok-voice-think-fast-2.0",
-                "grok-voice-think-fast-1.0",
-                "grok-voice-latest",
-                "grok-realtime-v1"
+                "grok-voice-think-fast-2.0"
               ]
             },
             "voice": {
@@ -1827,6 +2005,8 @@
               "type": "string",
               "enum": [
                 "eleven_flash_v2_5",
+                "eleven_v4_turbo",
+                "eleven_v4",
                 "eleven_v3",
                 "eleven_multilingual_v2",
                 "eleven_turbo_v2_5"
@@ -2033,6 +2213,270 @@
           "required": [
             "provider",
             "voice_id"
+          ]
+        },
+        {
+          "title": "VoiceDock (beta)",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "voicedock"
+              ]
+            },
+            "voice_id": {
+              "type": "string",
+              "enum": [
+                "voicedock"
+              ],
+              "default": "voicedock"
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "voicedock-1"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "voice_id"
+          ]
+        }
+      ]
+    },
+    "postcall_stt": {
+      "discriminator": {
+        "propertyName": "provider"
+      },
+      "oneOf": [
+        {
+          "title": "ElevenLabs Scribe",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "elevenlabs"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "scribe_v2"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "multi",
+                "nl",
+                "en",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pt",
+                "pl",
+                "ru",
+                "ja",
+                "ko",
+                "zh",
+                "ar",
+                "hi",
+                "da",
+                "sv",
+                "no",
+                "fi",
+                "cs",
+                "hu",
+                "ro",
+                "bg",
+                "hr",
+                "sk",
+                "tr",
+                "id",
+                "vi"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "Deepgram",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "deepgram"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "nova-3",
+                "nova-3-general"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "multi",
+                "nl",
+                "en",
+                "de",
+                "fr",
+                "es",
+                "it",
+                "pt",
+                "pl",
+                "ru",
+                "ja",
+                "ko",
+                "zh",
+                "ar",
+                "hi",
+                "da",
+                "sv",
+                "no",
+                "fi",
+                "cs",
+                "hu",
+                "ro",
+                "bg",
+                "hr",
+                "sk",
+                "tr",
+                "id",
+                "vi"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        }
+      ]
+    },
+    "postcall_llm": {
+      "discriminator": {
+        "propertyName": "provider"
+      },
+      "oneOf": [
+        {
+          "title": "OpenAI",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "openai"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gpt-5.4",
+                "gpt-5.4-mini",
+                "gpt-5.4-nano",
+                "gpt-5.2",
+                "gpt-5.1",
+                "gpt-5",
+                "gpt-5-mini",
+                "gpt-5-nano",
+                "gpt-4.1",
+                "gpt-4.1-mini",
+                "gpt-4.1-nano",
+                "gpt-5.6-luna",
+                "gpt-5.6-terra",
+                "gpt-5.6-sol",
+                "gpt-4o-mini"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "xAI",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "xai"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "grok-4.3"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "Mistral",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "mistral"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "mistral-medium-latest",
+                "mistral-small-latest",
+                "mistral-large-latest",
+                "ministral-8b-latest",
+                "ministral-14b-latest",
+                "ministral-3b-latest"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model"
+          ]
+        },
+        {
+          "title": "Google",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "google"
+              ]
+            },
+            "model": {
+              "type": "string",
+              "enum": [
+                "gemini-3.5-flash-lite",
+                "gemini-3.5-flash",
+                "gemini-2.5-flash-lite",
+                "gemini-2.5-flash"
+              ]
+            }
+          },
+          "required": [
+            "provider",
+            "model"
           ]
         }
       ]
