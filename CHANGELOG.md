@@ -4,6 +4,14 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Added
+
+- `SendSmsToolDefinition`, the built-in `send_sms` tool: the assistant sends a text message from the SMS number of your account, charged in credits per message part. Set the text in `template`, or let the assistant write it with `allow_model_text`; choose the receiver with `recipient` (`caller` by default, `fixed` with `fixed_to`, or `model`); limit the messages per call with `max_per_call`. It needs an SMS sender that VoiceDock has set up for your account. See https://doc.voicedock.ai/docs/api/assistants/createAssistant for the fields.
+
+### Changed
+
+- `LLMConfig.tools` accepts `SendSmsToolDefinition` next to `ToolDefinition` and `McpToolDefinition`.
+
 ## [2.2.0] - 2026-10-02
 
 ### Added

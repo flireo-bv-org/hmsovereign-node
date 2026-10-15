@@ -15,6 +15,7 @@ import type {
   LeadStatus,
   McpServerTestResult,
   McpToolDefinition,
+  SendSmsToolDefinition,
   OrganizationGetParams,
   RealtimeLLMProvider,
   STTProvider,
@@ -243,5 +244,38 @@ describe("MCP servers", () => {
     } else {
       expectTypeOf(result.error).toEqualTypeOf<string>();
     }
+  });
+});
+
+describe("SMS", () => {
+  it("sends a fixed text to the caller by default", () => {
+    const tool: SendSmsToolDefinition = {
+      type: "send_sms",
+      template: "Plan your appointment here: https://example.com/book",
+    };
+    const config: LLMConfig = { provider: "openai", model: "gpt-5.4-mini", tools: [tool] };
+    expectTypeOf(config.tools).not.toBeUndefined();
+  });
+
+  it("needs fixed_to with recipient fixed, and only then", () => {
+    expectTypeOf<{
+      type: "send_sms";
+      recipient: "fixed";
+      fixed_to: string[];
+      template: string;
+    }>().toExtend<SendSmsToolDefinition>();
+    expectTypeOf<{ type: "send_sms"; recipient: "fixed"; template: string }>().not.toExtend<SendSmsToolDefinition>();
+    expectTypeOf<{
+      type: "send_sms";
+      recipient: "caller";
+      fixed_to: string[];
+      template: string;
+    }>().not.toExtend<SendSmsToolDefinition>();
+  });
+
+  it("needs a template unless the assistant writes the text", () => {
+    expectTypeOf<{ type: "send_sms" }>().not.toExtend<SendSmsToolDefinition>();
+    expectTypeOf<{ type: "send_sms"; allow_model_text: true }>().toExtend<SendSmsToolDefinition>();
+    expectTypeOf<{ type: "send_sms"; allow_model_text: false }>().not.toExtend<SendSmsToolDefinition>();
   });
 });
