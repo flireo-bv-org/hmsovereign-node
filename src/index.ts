@@ -112,7 +112,14 @@ export type {
   PhoneNumberCreateParams,
   PhoneNumberUpdateParams,
 
+  // WhatsApp calling
+  NumberWhatsapp,
+  NumberWhatsappStatus,
+  NumberWhatsappErrorCode,
+  NumberWhatsappUpdateParams,
+
   // Calls
+  CallChannel,
   CallStatus,
   CallMessage,
   Call,

@@ -5,6 +5,7 @@ import type {
   AssistantUpdateParams,
   BYOKProvider,
   Call,
+  CallChannel,
   CallMessage,
   CampaignLeadCreateParams,
   CampaignStatus,
@@ -16,6 +17,9 @@ import type {
   McpServerTestResult,
   McpToolDefinition,
   SendSmsToolDefinition,
+  NumberWhatsapp,
+  NumberWhatsappStatus,
+  NumberWhatsappUpdateParams,
   OrganizationGetParams,
   RealtimeLLMProvider,
   STTProvider,
@@ -107,8 +111,23 @@ describe("webhook payloads", () => {
     expectTypeOf<WebhookCustomer["number"]>().toEqualTypeOf<string | null>();
   });
 
+  it("says how a call came in, on the call and in webhooks", () => {
+    expectTypeOf<"whatsapp">().toExtend<CallChannel>();
+    expectTypeOf<Call["channel"]>().toEqualTypeOf<CallChannel | null | undefined>();
+    expectTypeOf<WebhookCallInfo["channel"]>().toEqualTypeOf<CallChannel | undefined>();
+  });
+
   it("allows system messages in a transcript", () => {
     expectTypeOf<"system">().toExtend<CallMessage["role"]>();
+  });
+});
+
+describe("WhatsApp calling", () => {
+  it("requires the SIP password and never returns it", () => {
+    expectTypeOf<{ sip_password: "from-meta" }>().toExtend<NumberWhatsappUpdateParams>();
+    expectTypeOf<{ sip_username: "31850835037" }>().not.toExtend<NumberWhatsappUpdateParams>();
+    expectTypeOf<NumberWhatsapp>().not.toHaveProperty("sip_password");
+    expectTypeOf<NumberWhatsapp["status"]>().toEqualTypeOf<NumberWhatsappStatus>();
   });
 });
 

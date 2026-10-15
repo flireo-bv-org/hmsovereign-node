@@ -502,6 +502,62 @@ export interface PhoneNumberUpdateParams {
   is_active?: boolean;
 }
 
+// --- WhatsApp calling ---
+
+/**
+ * Status of WhatsApp calling on a number.
+ *
+ * - `off`: not set up.
+ * - `pending`: the credentials are being applied, usually within a minute.
+ * - `active`: WhatsApp calls to the number reach your assistant.
+ * - `refused`: the credentials were not applied; `error_code` says why.
+ * - `failed`: applying the credentials failed after several attempts; `error_code` says why.
+ * - `disabling`: being turned off; becomes `off` shortly.
+ */
+export type NumberWhatsappStatus = "off" | "pending" | "active" | "refused" | "failed" | "disabling";
+
+/**
+ * Why WhatsApp calling was refused or failed on a number, or why it is still pending.
+ * `lock_busy` and `upgrade_in_progress` are temporary: the status stays `pending` and
+ * the change goes through by itself. The type accepts other values the API may add.
+ */
+export type NumberWhatsappErrorCode =
+  | "number_on_other_trunk"
+  | "number_inactive"
+  | "missing_credentials"
+  | "apply_failed"
+  | "readback_mismatch"
+  | "no_addresses"
+  | "lock_busy"
+  | "upgrade_in_progress"
+  | (string & {});
+
+/** WhatsApp calling on a number. The SIP password is never returned. */
+export interface NumberWhatsapp {
+  status: NumberWhatsappStatus;
+  /** `null` when there is nothing to report */
+  error_code: NumberWhatsappErrorCode | null;
+  /** The username Meta authenticates with. `null` when WhatsApp calling is off. */
+  sip_username: string | null;
+  /** When the status last changed. `null` when WhatsApp calling is off. */
+  updated_at: string | null;
+}
+
+export interface NumberWhatsappUpdateParams {
+  /**
+   * The SIP password Meta generated for the number:
+   * `calling.sip.servers[0].sip_user_password` from
+   * `GET /{PHONE_NUMBER_ID}/settings?include_sip_credentials=true` on the Graph API.
+   * 8 to 200 characters. Stored encrypted and never returned.
+   */
+  sip_password: string;
+  /**
+   * Defaults to the number without the `+`, which is the username Meta uses.
+   * Letters, digits and `.` `_` `+` `-`, up to 64 characters.
+   */
+  sip_username?: string;
+}
+
 // --- Workflows ---
 
 /** Builder canvas position. Ignored by the calling engine. */
@@ -758,6 +814,9 @@ export interface WorkflowUpdateParams {
 
 // --- Calls ---
 
+/** How a call reached the platform: over the phone network, from WhatsApp, or as a web call. */
+export type CallChannel = "phone" | "whatsapp" | "web";
+
 /** Known call statuses. The API can return other values, which the type accepts as a plain string. */
 export type CallStatus =
   | "connecting"
@@ -784,6 +843,8 @@ export interface Call {
   assistant_phone: string | null;
   status: CallStatus;
   direction?: "inbound" | "outbound" | "web" | null;
+  /** How the call reached the platform. `null` on calls from before October 2026. */
+  channel?: CallChannel | null;
   end_reason?: string | null;
   error?: string | null;
   started_at?: string | null;
@@ -1355,6 +1416,8 @@ export type OrganizationUpdateParams = OrganizationRetention;
 export interface WebhookCallInfo {
   id: string;
   type: "inbound_phone_call" | "outbound_phone_call" | "web_call";
+  /** How the call reached the platform. `whatsapp` for a call placed from WhatsApp. */
+  channel?: CallChannel;
   status: string;
 }
 
