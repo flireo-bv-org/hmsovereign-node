@@ -282,4 +282,11 @@ describe("debug logging", () => {
       access_token: "[REDACTED]",
     });
   });
+
+  it("masks the SIP password for WhatsApp calling", () => {
+    expect(redactSecrets({ sip_password: "p-1", sip_username: "31850835037" })).toEqual({
+      sip_password: "[REDACTED]",
+      sip_username: "31850835037",
+    });
+  });
 });

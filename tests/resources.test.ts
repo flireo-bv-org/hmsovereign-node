@@ -238,6 +238,80 @@ describe("Numbers", () => {
   });
 });
 
+describe("Numbers WhatsApp calling", () => {
+  it("getWhatsapp() calls GET /numbers/:id/whatsapp and returns the status", async () => {
+    mock.onRequest("GET", "/numbers/n1/whatsapp", {
+      status: "active",
+      error_code: null,
+      sip_username: "31850835037",
+      updated_at: "2026-10-15T12:00:00Z",
+    });
+
+    const result = await new Numbers(mock as any).getWhatsapp("n1");
+
+    expect(mock.lastRequest).toMatchObject({ method: "GET", path: "/numbers/n1/whatsapp" });
+    expect(result.status).toBe("active");
+    expect(result.sip_username).toBe("31850835037");
+  });
+
+  it("updateWhatsapp() calls PUT /numbers/:id/whatsapp with the password and returns pending", async () => {
+    mock.onRequest("PUT", "/numbers/n1/whatsapp", {
+      status: "pending",
+      error_code: null,
+      sip_username: "31850835037",
+      updated_at: "2026-10-15T12:00:00Z",
+    });
+
+    const result = await new Numbers(mock as any).updateWhatsapp("n1", { sip_password: "secret-from-meta" });
+
+    expect(mock.lastRequest).toMatchObject({ method: "PUT", path: "/numbers/n1/whatsapp" });
+    expect(mock.lastRequest.body).toEqual({ sip_password: "secret-from-meta" });
+    expect(result.status).toBe("pending");
+  });
+
+  it("updateWhatsapp() sends sip_username only when given", async () => {
+    mock.onRequest("PUT", "/numbers/n1/whatsapp", { status: "pending" });
+
+    await new Numbers(mock as any).updateWhatsapp("n1", { sip_password: "secret-from-meta", sip_username: "31850835037" });
+
+    expect(mock.lastRequest.body).toEqual({ sip_password: "secret-from-meta", sip_username: "31850835037" });
+  });
+
+  it("deleteWhatsapp() calls DELETE /numbers/:id/whatsapp and returns disabling", async () => {
+    mock.onRequest("DELETE", "/numbers/n1/whatsapp", {
+      status: "disabling",
+      error_code: null,
+      sip_username: null,
+      updated_at: "2026-10-15T12:05:00Z",
+    });
+
+    const result = await new Numbers(mock as any).deleteWhatsapp("n1");
+
+    expect(mock.lastRequest).toMatchObject({ method: "DELETE", path: "/numbers/n1/whatsapp" });
+    expect(result.status).toBe("disabling");
+  });
+
+  it("surfaces the API error code when the number cannot take WhatsApp calls", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ error: "number_inactive", message: "The number is inactive. Turn it on first." }),
+            { status: 409, headers: { "Content-Type": "application/json" } },
+          ),
+      ),
+    );
+
+    const client = new HMSSovereign({ apiKey: "fl_test_123" });
+    const error = await client.numbers.updateWhatsapp("n1", { sip_password: "secret-from-meta" }).catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiRequestError);
+    expect(error.status).toBe(409);
+    expect(error.body?.error).toBe("number_inactive");
+  });
+});
+
 // ─── SIP Trunks ──────────────────────────────────────────────────────────────
 
 describe("SipTrunks", () => {

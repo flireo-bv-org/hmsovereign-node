@@ -4,9 +4,14 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-15
+
 ### Added
 
 - `SendSmsToolDefinition`, the built-in `send_sms` tool: the assistant sends a text message from the SMS number of your account, charged in credits per message part. Set the text in `template`, or let the assistant write it with `allow_model_text`; choose the receiver with `recipient` (`caller` by default, `fixed` with `fixed_to`, or `model`); limit the messages per call with `max_per_call`. It needs an SMS sender that VoiceDock has set up for your account. See https://doc.voicedock.ai/docs/api/assistants/createAssistant for the fields.
+- `numbers.getWhatsapp()`, `numbers.updateWhatsapp()` and `numbers.deleteWhatsapp()`, to manage WhatsApp calling on a number: WhatsApp users call your number from the chat with your business and your assistant answers. `updateWhatsapp()` sends the SIP password Meta generated for the number; it is write-only and never returned. Changes are applied in the background, so the result has status `pending` or `disabling`, and `getWhatsapp()` shows when the number is `active` or `off`. See https://doc.voicedock.ai/docs/integrations/whatsapp-calling.
+- `channel` on `Call` and on `WebhookCallInfo`, which says how a call came in: `phone`, `whatsapp` or `web`. On `Call` it is `null` for calls from before October 2026.
+- New exported types: `CallChannel`, `NumberWhatsapp`, `NumberWhatsappErrorCode`, `NumberWhatsappStatus` and `NumberWhatsappUpdateParams`.
 
 ### Changed
 
@@ -107,7 +112,9 @@ This release contains breaking changes. See Changed and Removed.
 - Automatic retries with exponential backoff on 5xx and 429 responses.
 - Webhook signature verification.
 
-[Unreleased]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/flireo-bv-org/hmsovereign-node/compare/v1.0.0...v1.0.1

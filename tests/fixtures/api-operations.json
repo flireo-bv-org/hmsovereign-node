@@ -38,6 +38,10 @@
       "deprecated": false
     },
     {
+      "operation": "DELETE /numbers/{}/whatsapp",
+      "deprecated": false
+    },
+    {
       "operation": "DELETE /sip-trunks/{}",
       "deprecated": false
     },
@@ -127,6 +131,10 @@
     },
     {
       "operation": "GET /numbers/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /numbers/{}/whatsapp",
       "deprecated": false
     },
     {
@@ -275,6 +283,10 @@
     },
     {
       "operation": "POST /workflows",
+      "deprecated": false
+    },
+    {
+      "operation": "PUT /numbers/{}/whatsapp",
       "deprecated": false
     }
   ]
