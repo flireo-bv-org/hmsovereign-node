@@ -292,6 +292,11 @@ describe("SMS", () => {
     }>().not.toExtend<SendSmsToolDefinition>();
   });
 
+  it("does not accept a number chosen by the assistant", () => {
+    expectTypeOf<{ type: "send_sms"; recipient: "caller"; template: string }>().toExtend<SendSmsToolDefinition>();
+    expectTypeOf<{ type: "send_sms"; recipient: "model"; template: string }>().not.toExtend<SendSmsToolDefinition>();
+  });
+
   it("needs a template unless the assistant writes the text", () => {
     expectTypeOf<{ type: "send_sms" }>().not.toExtend<SendSmsToolDefinition>();
     expectTypeOf<{ type: "send_sms"; allow_model_text: true }>().toExtend<SendSmsToolDefinition>();

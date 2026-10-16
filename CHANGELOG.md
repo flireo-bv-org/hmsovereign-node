@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Removed
+
+- `recipient: "model"` on `SendSmsToolDefinition`. A text message now goes only to the number the caller is calling from (`caller`, the default) or to a number in `fixed_to` (`fixed`); the assistant never chooses the number. The API rejects `recipient: "model"` with a `400` when you create or update an assistant. Use `caller` instead.
+
 ## [2.3.0] - 2026-10-15
 
 ### Added

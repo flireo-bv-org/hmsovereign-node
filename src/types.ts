@@ -237,10 +237,10 @@ interface SendSmsToolBase {
 type SendSmsRecipientConfig =
   | {
       /**
-       * `caller` (the default) sends the message to the number of the person on
-       * the call; `model` to a number the assistant provides.
+       * `caller` (the default) sends the message to the number the caller is
+       * calling from. The assistant never chooses the number.
        */
-      recipient?: "caller" | "model";
+      recipient?: "caller";
       fixed_to?: never;
     }
   | {
