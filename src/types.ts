@@ -237,8 +237,11 @@ interface SendSmsToolBase {
 type SendSmsRecipientConfig =
   | {
       /**
-       * `caller` (the default) sends the message to the number of the person on
-       * the call; `model` to a number the assistant provides.
+       * `caller` (the default) sends the message to the number the caller is
+       * calling from. `model` sends it to a number the assistant fills in,
+       * usually one the caller gives during the call; it is available only when
+       * VoiceDock has enabled it for your organization, otherwise creating or
+       * updating the assistant returns a `400`.
        */
       recipient?: "caller" | "model";
       fixed_to?: never;

@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Changed
+
+- Documentation of `recipient` on `SendSmsToolDefinition`: `recipient: "model"` is available only when VoiceDock has enabled it for your organization; otherwise creating or updating the assistant returns a `400`. The type is unchanged.
+
 ## [2.3.0] - 2026-10-15
 
 ### Added
