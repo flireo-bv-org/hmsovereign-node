@@ -1044,15 +1044,36 @@ describe("Arena", () => {
 
   it("saveSchedule() puts the routine and unwraps { arena_schedule }", async () => {
     mock.onRequest("PUT", "/arena/suites/s1/schedule", {
-      arena_schedule: { id: "sc1", suite_id: "s1", enabled: true, monthly_budget_eur: 25, spent_this_month_eur: 0 },
+      arena_schedule: {
+        id: "sc1",
+        suite_id: "s1",
+        enabled: true,
+        window_start: "02:00",
+        window_end: "05:00",
+        monthly_budget_eur: 25,
+        spent_this_month_eur: 0,
+      },
     });
 
     const arena = new Arena(mock as any);
-    const schedule = await arena.saveSchedule("s1", { enabled: true, monthly_budget_eur: 25, cadence: "daily" });
+    const schedule = await arena.saveSchedule("s1", {
+      enabled: true,
+      monthly_budget_eur: 25,
+      cadence: "daily",
+      window_start: "02:00",
+      window_end: "05:00",
+    });
 
     expect(mock.lastRequest.method).toBe("PUT");
-    expect(mock.lastRequest.body).toEqual({ enabled: true, monthly_budget_eur: 25, cadence: "daily" });
+    expect(mock.lastRequest.body).toEqual({
+      enabled: true,
+      monthly_budget_eur: 25,
+      cadence: "daily",
+      window_start: "02:00",
+      window_end: "05:00",
+    });
     expect(schedule.monthly_budget_eur).toBe(25);
+    expect(schedule.window_start).toBe("02:00");
   });
 
   it("getSchedule() returns null when the suite has no routine", async () => {

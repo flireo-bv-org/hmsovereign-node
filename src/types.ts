@@ -1448,8 +1448,7 @@ export type WebhookPayload =
   | AssistantRequestPayload
   | StatusUpdatePayload
   | ToolCallsPayload
-  | EndOfCallReportPayload
-  | ArenaEventPayload;
+  | EndOfCallReportPayload;
 
 // ============================================================================
 // Arena: test calls
@@ -1695,9 +1694,9 @@ export interface ArenaScheduleSaveParams {
   cadence?: "daily" | "weekly";
   /** Required for weekly: 0 is Sunday. */
   weekday?: number | null;
-  /** Start of the window, HH:MM in timezone. */
+  /** Start of the window, as HH:MM in `timezone`, for example "02:00". */
   window_start?: string;
-  /** End of the window. Each routine starts at a fixed moment within it. */
+  /** End of the window, as HH:MM. Each routine starts at a fixed moment within it. */
   window_end?: string;
   timezone?: string;
   repeats?: number;
@@ -1707,7 +1706,10 @@ export interface ArenaScheduleSaveParams {
   on_config_change?: boolean;
   /** Also run after a platform release. */
   on_platform_release?: boolean;
-  /** Where the arena events go. Defaults to the webhook of your organization. */
+  /**
+   * Where the Arena events of this routine go: an https URL on a public hostname, on port 443.
+   * Without it, they go to the webhook of your organization.
+   */
   webhook_url?: string | null;
   /** Also e-mail regressions and pauses to the owners and admins of your organization (default true). */
   notify_email?: boolean;
@@ -1717,10 +1719,14 @@ export interface ArenaSchedule extends Required<Omit<ArenaScheduleSaveParams, "w
   id: string;
   suite_id: string;
   weekday: number | null;
+  /** Start of the window, as HH:MM in `timezone`, for example "02:00". */
+  window_start: string;
+  /** End of the window, as HH:MM. */
+  window_end: string;
   webhook_url: string | null;
   /** Actual cost of its finished runs this month, plus the estimate of runs in progress. */
   spent_this_month_eur: number;
-  /** Maximum cost of one run, in credits, as last estimated. */
+  /** Estimated cost of one run, in credits, as last estimated. An estimate, not an upper bound. */
   estimated_run_credits: number;
   paused_reason: "budget" | "insufficient_credits" | "failed_to_start" | null;
   paused_detail: string | null;
@@ -1784,13 +1790,25 @@ export interface ArenaEventData {
   [key: string]: unknown;
 }
 
+export type ArenaEventType =
+  | "arena.run.completed"
+  | "arena.regression.detected"
+  | "arena.regression.resolved"
+  | "arena.schedule.paused";
+
 /**
- * Events of Arena routines, sent to the webhook of the routine or of your organization.
- * Same envelope and signature as the call webhooks; verify them with Webhooks.verify.
+ * An event of an Arena routine. Only sent for a suite with a routine, to the `webhook_url` of the
+ * routine or else to the webhook of your organization. Same envelope and signature as the call
+ * webhooks, signed with the webhook secret of your organization.
+ *
+ * Not part of `WebhookPayload`. Verify it with `Webhooks.verify<ArenaEventPayload>()`, or with
+ * `Webhooks.verify<WebhookPayload | ArenaEventPayload>()` on an endpoint that receives both.
  */
 export interface ArenaEventPayload {
   message: {
-    type: "arena.run.completed" | "arena.regression.detected" | "arena.regression.resolved" | "arena.schedule.paused";
+    /** The id of the event. It is the same on every delivery of the event: use it to drop duplicates. */
+    id: string;
+    type: ArenaEventType;
     timestamp: string;
     arena: ArenaEventData;
   };

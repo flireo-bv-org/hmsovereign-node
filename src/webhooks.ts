@@ -8,7 +8,11 @@ export interface WebhookVerifyOptions {
   signature: string;
   /** Timestamp from the `X-Webhook-Timestamp` header (Unix seconds) */
   timestamp: string;
-  /** Your webhook secret (configured on the assistant) */
+  /**
+   * Your webhook secret: the one set next to the webhook URL that received the event (on the
+   * assistant, the phone number or your organization). Arena events are signed with the
+   * webhook secret of your organization.
+   */
   secret: string;
   /** Max age in seconds to accept (default: 300 = 5 minutes) */
   maxAge?: number;
@@ -47,13 +51,27 @@ export interface WebhookVerifyOptions {
  *   res.sendStatus(200);
  * });
  * ```
+ *
+ * Arena routines send their events with the same signature. They are not part of
+ * `WebhookPayload`; name the payload type when you verify them:
+ *
+ * ```ts
+ * const event = Webhooks.verify<WebhookPayload | ArenaEventPayload>({ payload, signature, timestamp, secret });
+ * if (event.message.type === 'arena.regression.detected') {
+ *   console.log(event.message.id, event.message.arena.suite_id);
+ * }
+ * ```
  */
 export class Webhooks {
   /**
    * Verify a webhook signature and return the parsed payload.
    * Throws if the signature is invalid or the timestamp is too old.
+   *
+   * The payload is typed as `WebhookPayload`, the call webhooks. Pass a type argument for other
+   * events, such as `ArenaEventPayload`. It only sets the type of the result: the signature is
+   * checked the same way, and the body is not validated against the type.
    */
-  static verify(options: WebhookVerifyOptions): WebhookPayload {
+  static verify<T = WebhookPayload>(options: WebhookVerifyOptions): T {
     const { payload, signature, timestamp, secret, maxAge = 300 } = options;
 
     if (!signature || !timestamp || !secret) {
@@ -85,7 +103,7 @@ export class Webhooks {
       throw new WebhookVerificationError("Invalid webhook signature");
     }
 
-    return JSON.parse(payloadStr) as WebhookPayload;
+    return JSON.parse(payloadStr) as T;
   }
 
   /**

@@ -257,6 +257,7 @@ export type {
   ArenaRegression,
   ArenaEventData,
   ArenaEventPayload,
+  ArenaEventType,
   ArenaRun,
   ArenaCatalog,
 
