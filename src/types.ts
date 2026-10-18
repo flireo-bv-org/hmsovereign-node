@@ -1448,7 +1448,8 @@ export type WebhookPayload =
   | AssistantRequestPayload
   | StatusUpdatePayload
   | ToolCallsPayload
-  | EndOfCallReportPayload;
+  | EndOfCallReportPayload
+  | ArenaEventPayload;
 
 // ============================================================================
 // Arena: test calls
@@ -1671,4 +1672,113 @@ export interface WebhookCallArena {
   run_id: string;
   case_id: string;
   suite_id: string;
+}
+
+// ============================================================================
+// Arena: routines, trend and events
+// ============================================================================
+
+export interface ArenaScheduleSaveParams {
+  /** A routine is off until you enable it. */
+  enabled?: boolean;
+  cadence?: "daily" | "weekly";
+  /** Required for weekly: 0 is Sunday. */
+  weekday?: number | null;
+  /** Start of the window, HH:MM in timezone. */
+  window_start?: string;
+  /** End of the window. Each routine starts at a fixed moment within it. */
+  window_end?: string;
+  timezone?: string;
+  repeats?: number;
+  /** Required. At the budget the routine pauses and sends arena.schedule.paused. */
+  monthly_budget_eur: number;
+  /** Also run after the configuration of the assistant changed (after 15 quiet minutes). */
+  on_config_change?: boolean;
+  /** Also run after a platform release. */
+  on_platform_release?: boolean;
+  /** Where the arena events go. Defaults to the webhook of your organization. */
+  webhook_url?: string | null;
+}
+
+export interface ArenaSchedule extends Required<Omit<ArenaScheduleSaveParams, "weekday" | "webhook_url">> {
+  id: string;
+  suite_id: string;
+  weekday: number | null;
+  webhook_url: string | null;
+  /** Actual cost of its finished runs this month, plus the estimate of runs in progress. */
+  spent_this_month_eur: number;
+  /** Maximum cost of one run, in credits, as last estimated. */
+  estimated_run_credits: number;
+  paused_reason: "budget" | "insufficient_credits" | "failed_to_start" | null;
+  paused_detail: string | null;
+  paused_at: string | null;
+  next_run_at: string | null;
+  last_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ArenaTrendCell {
+  /** Passed */
+  k: number;
+  /** Judged (not_applicable does not count) */
+  n: number;
+  /** Lower bound of the 95% Wilson interval */
+  low: number;
+  /** Upper bound of the 95% Wilson interval */
+  high: number;
+}
+
+export interface ArenaRegression {
+  case_key: string;
+  criterion_id: string;
+  critical: boolean;
+  detected_run_id: string | null;
+  detail: {
+    current?: { passed: number; judged: number };
+    baseline?: { passed: number; judged: number };
+    p_value?: number | null;
+    config_changed?: boolean;
+  };
+  opened_at: string;
+}
+
+export interface ArenaTrend {
+  /** Compare with config_hash of a run: different means the result is outdated. */
+  current_config_hash: string;
+  runs: {
+    id: string;
+    created_at: string;
+    trigger: "manual" | "schedule" | "config_change" | "platform_release" | "ci";
+    status: string;
+    config_hash: string | null;
+    platform_version: Record<string, unknown> | null;
+  }[];
+  rows: { case_key: string; criterion_id: string; per_run: Record<string, ArenaTrendCell> }[];
+  open_regressions: ArenaRegression[];
+}
+
+export interface ArenaTrendParams {
+  /** Number of runs, 1 to 50 (default 20). */
+  limit?: number;
+}
+
+/** The arena object of an Arena event. */
+export interface ArenaEventData {
+  suite_id: string;
+  schedule_id: string;
+  run_id?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Events of Arena routines, sent to the webhook of the routine or of your organization.
+ * Same envelope and signature as the call webhooks; verify them with Webhooks.verify.
+ */
+export interface ArenaEventPayload {
+  message: {
+    type: "arena.run.completed" | "arena.regression.detected" | "arena.regression.resolved" | "arena.schedule.paused";
+    timestamp: string;
+    arena: ArenaEventData;
+  };
 }

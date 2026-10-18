@@ -1010,4 +1010,44 @@ describe("Arena", () => {
     const arena = new Arena(mock as any);
     expect(await arena.cancelRun("r1")).toBe(4);
   });
+
+  it("saveSchedule() puts the routine and unwraps { arena_schedule }", async () => {
+    mock.onRequest("PUT", "/arena/suites/s1/schedule", {
+      arena_schedule: { id: "sc1", suite_id: "s1", enabled: true, monthly_budget_eur: 25, spent_this_month_eur: 0 },
+    });
+
+    const arena = new Arena(mock as any);
+    const schedule = await arena.saveSchedule("s1", { enabled: true, monthly_budget_eur: 25, cadence: "daily" });
+
+    expect(mock.lastRequest.method).toBe("PUT");
+    expect(mock.lastRequest.body).toEqual({ enabled: true, monthly_budget_eur: 25, cadence: "daily" });
+    expect(schedule.monthly_budget_eur).toBe(25);
+  });
+
+  it("getSchedule() returns null when the suite has no routine", async () => {
+    mock.onRequest("GET", "/arena/suites/s1/schedule", { arena_schedule: null });
+
+    const arena = new Arena(mock as any);
+    expect(await arena.getSchedule("s1")).toBeNull();
+  });
+
+  it("deleteSchedule() deletes the routine", async () => {
+    mock.onRequest("DELETE", "/arena/suites/s1/schedule", { success: true });
+
+    const arena = new Arena(mock as any);
+    await arena.deleteSchedule("s1");
+    expect(mock.lastRequest.method).toBe("DELETE");
+  });
+
+  it("getTrend() passes limit and unwraps { arena_trend }", async () => {
+    mock.onRequest("GET", "/arena/suites/s1/trend", {
+      arena_trend: { current_config_hash: "h", runs: [], rows: [], open_regressions: [] },
+    });
+
+    const arena = new Arena(mock as any);
+    const trend = await arena.getTrend("s1", { limit: 5 });
+
+    expect(mock.lastRequest.query).toEqual({ limit: 5 });
+    expect(trend.current_config_hash).toBe("h");
+  });
 });

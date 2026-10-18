@@ -10,6 +10,10 @@
       "deprecated": false
     },
     {
+      "operation": "DELETE /arena/suites/{}/schedule",
+      "deprecated": false
+    },
+    {
       "operation": "DELETE /assistants/{}",
       "deprecated": false
     },
@@ -95,6 +99,14 @@
     },
     {
       "operation": "GET /arena/suites/{}/runs",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/suites/{}/schedule",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/suites/{}/trend",
       "deprecated": false
     },
     {
@@ -335,6 +347,10 @@
     },
     {
       "operation": "POST /workflows",
+      "deprecated": false
+    },
+    {
+      "operation": "PUT /arena/suites/{}/schedule",
       "deprecated": false
     },
     {

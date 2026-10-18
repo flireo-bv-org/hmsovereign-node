@@ -7,8 +7,12 @@ import type {
   ArenaCatalog,
   ArenaRun,
   ArenaRunStartParams,
+  ArenaSchedule,
+  ArenaScheduleSaveParams,
   ArenaSuite,
   ArenaSuiteCreateParams,
+  ArenaTrend,
+  ArenaTrendParams,
 } from "../types";
 
 /** Arena: test calls that really call your assistant over the phone line. */
@@ -106,6 +110,43 @@ export class Arena {
   async getRun(runId: string): Promise<ArenaRun> {
     const res = await this.client.request<{ arena_run: ArenaRun }>({ method: "GET", path: `/arena/runs/${encodePathParam(runId)}` });
     return res.arena_run;
+  }
+
+  /** The routine of a suite, or null when it has none */
+  async getSchedule(suiteId: string): Promise<ArenaSchedule | null> {
+    const res = await this.client.request<{ arena_schedule: ArenaSchedule | null }>({
+      method: "GET",
+      path: `/arena/suites/${encodePathParam(suiteId)}/schedule`,
+    });
+    return res.arena_schedule;
+  }
+
+  /**
+   * Create or update the routine of a suite. Off until you enable it; at its monthly budget
+   * it pauses. Saving it enabled again resumes it.
+   */
+  async saveSchedule(suiteId: string, params: ArenaScheduleSaveParams): Promise<ArenaSchedule> {
+    const res = await this.client.request<{ arena_schedule: ArenaSchedule }>({
+      method: "PUT",
+      path: `/arena/suites/${encodePathParam(suiteId)}/schedule`,
+      body: params,
+    });
+    return res.arena_schedule;
+  }
+
+  /** Remove the routine of a suite. Its runs and results stay. */
+  async deleteSchedule(suiteId: string): Promise<void> {
+    await this.client.request<{ success: boolean }>({ method: "DELETE", path: `/arena/suites/${encodePathParam(suiteId)}/schedule` });
+  }
+
+  /** Pass rates per case and criterion over the latest runs, with open regressions */
+  async getTrend(suiteId: string, params?: ArenaTrendParams): Promise<ArenaTrend> {
+    const res = await this.client.request<{ arena_trend: ArenaTrend }>({
+      method: "GET",
+      path: `/arena/suites/${encodePathParam(suiteId)}/trend`,
+      query: params?.limit !== undefined ? { limit: params.limit } : undefined,
+    });
+    return res.arena_trend;
   }
 
   /** Cancel a run. Returns the number of attempts that were still queued. */
