@@ -91,7 +91,6 @@ export type {
   LLMConfig,
   ToolDefinition,
   McpToolDefinition,
-  SendSmsToolDefinition,
 
   // TTS
   TTSProvider,
