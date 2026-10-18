@@ -1572,6 +1572,8 @@ export interface ArenaRunStartParams {
   repeats?: number;
   /** Only these active cases. Default: all active cases. */
   case_ids?: string[];
+  /** "ci" marks a run started from your CI, so the trend can tell them apart. */
+  trigger?: "manual" | "ci";
 }
 
 export interface ArenaRunEstimate {
