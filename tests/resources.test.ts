@@ -982,6 +982,37 @@ describe("McpServers", () => {
 });
 
 describe("Arena", () => {
+  it("createSuite() posts assistant_id and unwraps { arena_suite }", async () => {
+    mock.onRequest("POST", "/arena/suites", {
+      arena_suite: { id: "s1", name: "Core set", assistant_id: "a1", number_id: "n1", caller_number_id: "n2", created_at: "2026-10-18T00:00:00Z" },
+    });
+
+    const arena = new Arena(mock as any);
+    const suite = await arena.createSuite({ name: "Core set", assistant_id: "a1", number_id: "n1", caller_number_id: "n2" });
+
+    expect(mock.lastRequest.body).toEqual({ name: "Core set", assistant_id: "a1", number_id: "n1", caller_number_id: "n2" });
+    expect(suite.assistant_id).toBe("a1");
+  });
+
+  it("saveCase() posts the case with catalog ids and unwraps { arena_case }", async () => {
+    mock.onRequest("POST", "/arena/suites/s1/cases", {
+      arena_case: { id: "c1", suite_id: "s1", key: "book", version: 1, status: "active", goal: "Book", criteria: [] },
+    });
+
+    const arena = new Arena(mock as any);
+    const saved = await arena.saveCase("s1", {
+      key: "book",
+      status: "active",
+      goal: "Book",
+      persona_id: "customer-clear",
+      audio_profile_id: "street",
+      criteria: [],
+    });
+
+    expect(mock.lastRequest.body).toMatchObject({ persona_id: "customer-clear", audio_profile_id: "street" });
+    expect(saved.version).toBe(1);
+  });
+
   it("startRun() posts repeats and unwraps { arena_run } with its estimate", async () => {
     mock.onRequest("POST", "/arena/suites/s1/runs", {
       arena_run: { id: "r1", status: "queued", estimate: { max_cost_eur: 1.2, max_credits: 18, attempts: 3, complete: true } },

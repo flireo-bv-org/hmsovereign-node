@@ -108,7 +108,10 @@ export class Arena {
     return res.arena_run;
   }
 
-  /** Cancel a run. Returns the number of attempts that were still queued. */
+  /**
+   * Cancel a run. Queued attempts are not called; an attempt that is in progress is finished,
+   * and the run then ends as `cancelled`. Returns the number of attempts that were still queued.
+   */
   async cancelRun(runId: string): Promise<number> {
     const res = await this.client.request<{ cancelled_attempts: number }>({
       method: "POST",

@@ -1458,7 +1458,7 @@ export interface ArenaSuite {
   id: string;
   name: string;
   /** The assistant under test */
-  agent_id: string;
+  assistant_id: string;
   /** Your number that routes to the assistant; the test caller calls it */
   number_id: string;
   /** Your number the test caller calls from, over your own SIP trunk */
@@ -1574,7 +1574,9 @@ export interface ArenaRunStartParams {
 }
 
 export interface ArenaRunEstimate {
+  /** Estimated cost of the run in euros, on both legs and including the judge. An estimate, not an upper bound. */
   max_cost_eur: number;
+  /** The same estimate in credits. A run only starts when your balance covers it. */
   max_credits: number;
   attempts: number;
   /** False if a price was missing and a conservative rate was used */
@@ -1591,7 +1593,9 @@ export type ArenaVoidReason =
   | "transcript_missing"
   | "infra"
   | "tester_error"
-  | "tester_unavailable";
+  | "tester_unavailable"
+  /** The case was retired, or replaced by a newer version, after the run started */
+  | "case_retired";
 
 export interface ArenaVerdict {
   criterion_id: string;
@@ -1600,7 +1604,6 @@ export interface ArenaVerdict {
   evidence_quote?: string | null;
   turn_index?: number | null;
   reasoning?: string | null;
-  judge_model?: string | null;
   judge_prompt_version?: string | null;
   override_outcome?: string | null;
 }
@@ -1649,10 +1652,16 @@ export interface ArenaAttemptRecordings {
 export interface ArenaRun {
   id: string;
   suite_id: string;
-  agent_id: string;
+  /** The assistant under test */
+  assistant_id: string;
+  /**
+   * `cancelled` when the run was cancelled, also when an attempt that was in progress at that
+   * moment finished afterwards.
+   */
   status: "queued" | "running" | "done" | "cancelled";
   trigger: string;
   repeats: number;
+  /** The estimated cost in euros at the start of the run. An estimate, not an upper bound. */
   estimated_max_cost_eur?: number | null;
   /** Hash of the assistant configuration at the start of the run */
   config_hash?: string | null;
