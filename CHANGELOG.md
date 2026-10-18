@@ -4,6 +4,12 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Added
+
+- `client.arena`, to test an assistant with real phone calls. A test caller with a persona and a goal calls your number, and after the call every criterion of the test case gets a verdict with its evidence. Suites with `listSuites()`, `createSuite()`, `getSuite()` and `deleteSuite()`; test cases with `listCases()`, `saveCase()`, `getCase()` and `updateCaseStatus()`; runs with `listRuns()`, `startRun()`, `getRun()` and `cancelRun()`; and `getCatalog()` for the personas, audio profiles, timeline events, channels, criterion kinds and metrics. Saving a case with an unchanged definition returns the latest version instead of creating a new one. Test calls are real calls and are billed as such, on both legs. See https://doc.voicedock.ai/docs/features/arena.
+- `arena` on `WebhookCallInfo`. On the tested assistant, the webhooks of a test call name the attempt, run, case and suite, so you can keep test calls out of your own systems.
+- New exported types: `ArenaAttempt`, `ArenaAttemptRecordings`, `ArenaCase`, `ArenaCaseListParams`, `ArenaCaseSaveParams`, `ArenaCatalog`, `ArenaCriterion`, `ArenaCriterionKind`, `ArenaEntity`, `ArenaMetric`, `ArenaRun`, `ArenaRunEstimate`, `ArenaRunStartParams`, `ArenaSuite`, `ArenaSuiteCreateParams`, `ArenaTimelineEvent`, `ArenaToolMode`, `ArenaVerdict`, `ArenaVoidReason` and `WebhookCallArena`.
+
 ## [2.3.1] - 2026-10-18
 
 ### Removed

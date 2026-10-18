@@ -1,5 +1,11 @@
 import { describe, it, expectTypeOf } from "vitest";
 import type {
+  ArenaCaseSaveParams,
+  ArenaRun,
+  ArenaRunEstimate,
+  ArenaSuite,
+  ArenaVerdict,
+  ArenaVoidReason,
   Assistant,
   AssistantCreateParams,
   AssistantUpdateParams,
@@ -262,5 +268,37 @@ describe("MCP servers", () => {
     } else {
       expectTypeOf(result.error).toEqualTypeOf<string>();
     }
+  });
+});
+
+describe("Arena", () => {
+  it("names the assistant under test assistant_id", () => {
+    expectTypeOf<ArenaSuite["assistant_id"]>().toEqualTypeOf<string>();
+    expectTypeOf<ArenaRun["assistant_id"]>().toEqualTypeOf<string>();
+    expectTypeOf<ArenaSuite>().not.toHaveProperty("agent_id");
+    expectTypeOf<ArenaRun>().not.toHaveProperty("agent_id");
+  });
+
+  it("does not return the judge model on a verdict", () => {
+    expectTypeOf<ArenaVerdict>().not.toHaveProperty("judge_model");
+    expectTypeOf<ArenaVerdict["judge_prompt_version"]>().toEqualTypeOf<string | null | undefined>();
+  });
+
+  it("voids an attempt whose case was retired during the run", () => {
+    expectTypeOf<"case_retired">().toExtend<ArenaVoidReason>();
+    expectTypeOf<"caller_id_mismatch">().toExtend<ArenaVoidReason>();
+  });
+
+  it("accepts catalog ids for persona and audio profile", () => {
+    const params: ArenaCaseSaveParams = {
+      key: "book-appointment",
+      goal: "You want to book an appointment for a leak in your ceiling.",
+      persona_id: "customer-clear",
+      language: "en",
+      audio_profile_id: "street",
+      criteria: [{ id: "books", kind: "tool_required", tool: "book_appointment" }],
+    };
+    expectTypeOf(params.persona_id).toEqualTypeOf<string | undefined>();
+    expectTypeOf<ArenaRunEstimate["max_credits"]>().toEqualTypeOf<number>();
   });
 });

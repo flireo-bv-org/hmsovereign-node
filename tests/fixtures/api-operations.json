@@ -286,11 +286,11 @@
       "deprecated": false
     },
     {
-      "operation": "POST /calls/outbound",
+      "operation": "POST /calls/{}/control",
       "deprecated": false
     },
     {
-      "operation": "POST /calls/{}/control",
+      "operation": "POST /calls/outbound",
       "deprecated": false
     },
     {
