@@ -203,7 +203,7 @@ export interface LLMConfig {
   /** `xai_realtime` only: server-side turn detection. Omitted fields use the provider default. */
   turn_detection?: XAITurnDetection;
   messages?: LLMMessage[];
-  tools?: Array<ToolDefinition | McpToolDefinition | SendSmsToolDefinition>;
+  tools?: Array<ToolDefinition | McpToolDefinition>;
 }
 
 /** Attaches an MCP server to the assistant, with the server's tools it may use. */
@@ -216,53 +216,6 @@ export interface McpToolDefinition {
   /** Reject the call when the server cannot be reached. Defaults to `true`. */
   required?: boolean;
 }
-
-/**
- * Built-in tool: lets the assistant send a text message from the SMS number of
- * your account, charged in credits per message part. It needs an SMS sender that
- * VoiceDock has set up for your account; without one, the tool tells the
- * assistant it cannot send. Countries, mobile numbers, limits and balance are
- * checked on every message.
- */
-export type SendSmsToolDefinition = SendSmsToolBase & SendSmsRecipientConfig & SendSmsTextConfig;
-
-interface SendSmsToolBase {
-  type: "send_sms";
-  /** How many messages the assistant may send during one call, 1-5. Defaults to 1. */
-  max_per_call?: number;
-  /** Tells the model when to send the message, at most 500 characters. A default is used when omitted. */
-  description?: string;
-}
-
-type SendSmsRecipientConfig =
-  | {
-      /**
-       * `caller` (the default) sends the message to the number of the person on
-       * the call; `model` to a number the assistant provides.
-       */
-      recipient?: "caller" | "model";
-      fixed_to?: never;
-    }
-  | {
-      /** Send the message to one of the numbers in `fixed_to`. */
-      recipient: "fixed";
-      /** One to five phone numbers in E.164 format, e.g. "+31612345678" */
-      fixed_to: string[];
-    };
-
-type SendSmsTextConfig =
-  | {
-      /** The text of the message, at most 640 characters */
-      template: string;
-      /** Let the assistant write the text itself; the template is then the default */
-      allow_model_text?: boolean;
-    }
-  | {
-      /** Optional default text when the assistant writes the text itself */
-      template?: string;
-      /** The assistant writes the text itself, at most 320 characters */
-      allow_model_text: true;
-    };
 
 /** Backend model of an `openai_live` assistant. */
 export interface LLMDelegation {
