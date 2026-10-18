@@ -248,6 +248,7 @@ export type {
   ArenaVerdict,
   ArenaMetric,
   ArenaAttempt,
+  ArenaAttemptRecordings,
   ArenaRun,
   ArenaCatalog,
 

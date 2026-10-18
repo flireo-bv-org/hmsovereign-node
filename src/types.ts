@@ -1626,8 +1626,24 @@ export interface ArenaAttempt {
   tester_call_id?: string | null;
   /** The call on your assistant */
   target_call_id?: string | null;
+  /**
+   * Signed URLs of the recording per track, valid as long as the call recording.
+   * Deleted with the calls under your retention period.
+   */
+  recordings?: ArenaAttemptRecordings | null;
   verdicts?: ArenaVerdict[];
   metrics?: ArenaMetric[];
+}
+
+export interface ArenaAttemptRecordings {
+  /** The voice of the test caller */
+  tester?: string;
+  /** What the timeline played: noise and voices */
+  events?: string;
+  /** What the test caller heard from the line */
+  assistant?: string;
+  /** What your assistant received */
+  received?: string;
 }
 
 export interface ArenaRun {
