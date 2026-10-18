@@ -57,7 +57,7 @@ export class Arena {
     return res.arena_cases;
   }
 
-  /** Save a test case. Saving with an existing key creates a new version. */
+  /** Save a test case. Saving with an existing key creates a new version, unless the definition is unchanged. */
   async saveCase(suiteId: string, params: ArenaCaseSaveParams): Promise<ArenaCase> {
     const res = await this.client.request<{ arena_case: ArenaCase }>({
       method: "POST",
