@@ -1372,6 +1372,8 @@ export interface WebhookCallInfo {
   /** How the call reached the platform. `whatsapp` for a call placed from WhatsApp. */
   channel?: CallChannel;
   status: string;
+  /** Only on calls that are part of an Arena test, on the tested assistant */
+  arena?: WebhookCallArena;
 }
 
 export interface WebhookPhoneNumber {
@@ -1447,3 +1449,210 @@ export type WebhookPayload =
   | StatusUpdatePayload
   | ToolCallsPayload
   | EndOfCallReportPayload;
+
+// ============================================================================
+// Arena: test calls
+// ============================================================================
+
+export interface ArenaSuite {
+  id: string;
+  name: string;
+  /** The assistant under test */
+  agent_id: string;
+  /** Your number that routes to the assistant; the test caller calls it */
+  number_id: string;
+  /** Your number the test caller calls from, over your own SIP trunk */
+  caller_number_id: string;
+  created_at: string;
+  updated_at?: string;
+  /** Current test cases (only returned by getSuite) */
+  cases?: ArenaCase[];
+}
+
+export interface ArenaSuiteCreateParams {
+  name: string;
+  assistant_id: string;
+  number_id: string;
+  /** Another number of yours with its own SIP trunk. A managed number cannot place calls. */
+  caller_number_id: string;
+}
+
+export interface ArenaEntity {
+  key: string;
+  label?: string;
+  value: string;
+  /** How the caller says it. Default: each digit and letter spelled out. */
+  spoken?: string;
+}
+
+export interface ArenaTimelineEvent {
+  type: "noise" | "voice" | "barge_in" | "silence" | "dtmf" | "hangup";
+  /** Seconds after the call was answered. Give either at_s or at_turn. */
+  at_s?: number;
+  /** The n-th turn of the assistant, from 1 */
+  at_turn?: number;
+  [field: string]: unknown;
+}
+
+export interface ArenaToolMode {
+  mode: "live" | "mock" | "fault";
+  response?: unknown;
+  fault?: "error" | "timeout" | "delay";
+  message?: string;
+  delay_ms?: number;
+  then?: "live" | "mock";
+}
+
+export type ArenaCriterionKind =
+  | "must"
+  | "must_not"
+  | "audio_must"
+  | "tool_required"
+  | "tool_forbidden"
+  | "transfer_expected"
+  | "hangup_expected"
+  | "entity_recall"
+  | "latency_max";
+
+export interface ArenaCriterion {
+  id: string;
+  kind: ArenaCriterionKind;
+  severity?: "normal" | "critical";
+  text?: string;
+  tool?: string;
+  arguments?: Record<string, unknown>;
+  destination?: string;
+  by?: "assistant" | "caller";
+  entity?: string;
+  stages?: ("understood" | "tool" | "repeated")[];
+  metric?: string;
+  max_ms?: number;
+}
+
+export interface ArenaCaseSaveParams {
+  /** Saving with an existing key creates a new version */
+  key: string;
+  status?: "proposed" | "active";
+  goal: string;
+  tester_kind?: "speech_to_speech" | "scripted";
+  tester_model?: "primary" | "secondary";
+  persona_id?: string;
+  language?: "nl" | "en";
+  audio_profile_id?: string;
+  channel?: "clean" | "speakerphone" | "muffled" | "packet_loss";
+  channel_params?: Record<string, unknown>;
+  timeline?: ArenaTimelineEvent[];
+  facts?: Record<string, unknown>;
+  entities?: ArenaEntity[];
+  /** Every tool of the assistant needs a choice. There is no default. */
+  tool_mode?: Record<string, ArenaToolMode>;
+  max_duration_s?: number;
+  criteria: ArenaCriterion[];
+  source_call_ids?: string[];
+}
+
+export interface ArenaCase extends Omit<ArenaCaseSaveParams, "status"> {
+  id: string;
+  suite_id: string;
+  version: number;
+  status: "proposed" | "active" | "retired";
+  language_plan?: { language: string };
+  created_by?: "ai" | "user";
+  created_at?: string;
+}
+
+export interface ArenaCaseListParams {
+  /** Include retired versions */
+  include_retired?: boolean;
+}
+
+export interface ArenaRunStartParams {
+  /** Attempts per test case, 1 to 5 */
+  repeats?: number;
+  /** Only these active cases. Default: all active cases. */
+  case_ids?: string[];
+}
+
+export interface ArenaRunEstimate {
+  max_cost_eur: number;
+  max_credits: number;
+  attempts: number;
+  /** False if a price was missing and a conservative rate was used */
+  complete: boolean;
+}
+
+export type ArenaVoidReason =
+  | "no_answer"
+  | "no_agent"
+  | "not_routed_to_assistant"
+  | "caller_id_mismatch"
+  | "caller_trunk_rejected"
+  | "credit_cap"
+  | "transcript_missing"
+  | "infra"
+  | "tester_error"
+  | "tester_unavailable";
+
+export interface ArenaVerdict {
+  criterion_id: string;
+  outcome: "pass" | "fail" | "not_applicable";
+  source: "fact" | "acoustic" | "judge" | "audio_judge";
+  evidence_quote?: string | null;
+  turn_index?: number | null;
+  reasoning?: string | null;
+  judge_model?: string | null;
+  judge_prompt_version?: string | null;
+  override_outcome?: string | null;
+}
+
+export interface ArenaMetric {
+  metric_id: string;
+  metric_version: string;
+  value: number;
+  unit: string;
+}
+
+export interface ArenaAttempt {
+  id: string;
+  case_id: string;
+  attempt_no: number;
+  status: "queued" | "claimed" | "dialing" | "in_call" | "awaiting_transcript" | "judging" | "scored" | "void" | "failed";
+  void_reason?: ArenaVoidReason | null;
+  last_error?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  latency?: Record<string, unknown> | null;
+  /** The call of the test caller */
+  tester_call_id?: string | null;
+  /** The call on your assistant */
+  target_call_id?: string | null;
+  verdicts?: ArenaVerdict[];
+  metrics?: ArenaMetric[];
+}
+
+export interface ArenaRun {
+  id: string;
+  suite_id: string;
+  agent_id: string;
+  status: "queued" | "running" | "done" | "cancelled";
+  trigger: string;
+  repeats: number;
+  estimated_max_cost_eur?: number | null;
+  /** Hash of the assistant configuration at the start of the run */
+  config_hash?: string | null;
+  created_at: string;
+  started_at?: string | null;
+  finished_at?: string | null;
+  estimate?: ArenaRunEstimate;
+  attempts?: ArenaAttempt[];
+}
+
+export type ArenaCatalog = Record<string, unknown>;
+
+/** On calls that are part of an Arena test, on the tested assistant */
+export interface WebhookCallArena {
+  attempt_id: string;
+  run_id: string;
+  case_id: string;
+  suite_id: string;
+}

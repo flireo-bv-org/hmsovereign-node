@@ -3,6 +3,7 @@ import { MockHttpClient } from "./mock-client";
 import { HMSSovereign, ApiRequestError } from "../src/index";
 import { Assistants } from "../src/resources/assistants";
 import { Calls } from "../src/resources/calls";
+import { Arena } from "../src/resources/arena";
 import { Numbers } from "../src/resources/numbers";
 import { SipTrunks } from "../src/resources/sip-trunks";
 import { Voices } from "../src/resources/voices";
@@ -977,5 +978,36 @@ describe("McpServers", () => {
     const client = new HMSSovereign({ apiKey: "test" });
 
     expect(client.mcpServers).toBeInstanceOf(McpServers);
+  });
+});
+
+describe("Arena", () => {
+  it("startRun() posts repeats and unwraps { arena_run } with its estimate", async () => {
+    mock.onRequest("POST", "/arena/suites/s1/runs", {
+      arena_run: { id: "r1", status: "queued", estimate: { max_cost_eur: 1.2, max_credits: 18, attempts: 3, complete: true } },
+    });
+
+    const arena = new Arena(mock as any);
+    const run = await arena.startRun("s1", { repeats: 3 });
+
+    expect(mock.lastRequest.body).toEqual({ repeats: 3 });
+    expect(run.estimate?.attempts).toBe(3);
+  });
+
+  it("listCases() asks for retired versions only when requested", async () => {
+    mock.onRequest("GET", "/arena/suites/s1/cases", { arena_cases: [] });
+
+    const arena = new Arena(mock as any);
+    await arena.listCases("s1");
+    expect(mock.lastRequest.query).toBeUndefined();
+    await arena.listCases("s1", { include_retired: true });
+    expect(mock.lastRequest.query).toEqual({ include_retired: true });
+  });
+
+  it("cancelRun() returns the number of attempts that were still queued", async () => {
+    mock.onRequest("POST", "/arena/runs/r1/cancel", { cancelled_attempts: 4 });
+
+    const arena = new Arena(mock as any);
+    expect(await arena.cancelRun("r1")).toBe(4);
   });
 });

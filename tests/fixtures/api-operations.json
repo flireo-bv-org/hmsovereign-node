@@ -6,6 +6,10 @@
       "deprecated": false
     },
     {
+      "operation": "DELETE /arena/suites/{}",
+      "deprecated": false
+    },
+    {
       "operation": "DELETE /assistants/{}",
       "deprecated": false
     },
@@ -63,6 +67,34 @@
     },
     {
       "operation": "GET /analysis-templates/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/cases/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/catalog",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/runs/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/suites",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/suites/{}",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/suites/{}/cases",
+      "deprecated": false
+    },
+    {
+      "operation": "GET /arena/suites/{}/runs",
       "deprecated": false
     },
     {
@@ -178,6 +210,10 @@
       "deprecated": false
     },
     {
+      "operation": "PATCH /arena/cases/{}",
+      "deprecated": false
+    },
+    {
       "operation": "PATCH /assistants/{}",
       "deprecated": false
     },
@@ -210,6 +246,22 @@
       "deprecated": false
     },
     {
+      "operation": "POST /arena/runs/{}/cancel",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /arena/suites",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /arena/suites/{}/cases",
+      "deprecated": false
+    },
+    {
+      "operation": "POST /arena/suites/{}/runs",
+      "deprecated": false
+    },
+    {
       "operation": "POST /assistants",
       "deprecated": false
     },
@@ -222,11 +274,11 @@
       "deprecated": false
     },
     {
-      "operation": "POST /calls/{}/control",
+      "operation": "POST /calls/outbound",
       "deprecated": false
     },
     {
-      "operation": "POST /calls/outbound",
+      "operation": "POST /calls/{}/control",
       "deprecated": false
     },
     {
