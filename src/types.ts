@@ -1698,6 +1698,8 @@ export interface ArenaScheduleSaveParams {
   on_platform_release?: boolean;
   /** Where the arena events go. Defaults to the webhook of your organization. */
   webhook_url?: string | null;
+  /** Also e-mail regressions and pauses to the owners and admins of your organization (default true). */
+  notify_email?: boolean;
 }
 
 export interface ArenaSchedule extends Required<Omit<ArenaScheduleSaveParams, "weekday" | "webhook_url">> {
