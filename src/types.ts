@@ -162,6 +162,16 @@ export interface STTConfig {
   translation_enabled?: boolean;
   /** Gladia only */
   translation_target_languages?: string[];
+  /**
+   * Deepgram Flux (`flux-general-multi`) only, 0.5 to 0.9 (default 0.7): how sure Flux must
+   * be that the caller's turn is over.
+   */
+  eot_threshold?: number;
+  /**
+   * Deepgram Flux (`flux-general-multi`) only, 0.3 to 0.9 (off by default): lets the
+   * assistant start preparing a reply when the turn is probably over.
+   */
+  eager_eot_threshold?: number;
 }
 
 // --- LLM Config ---
