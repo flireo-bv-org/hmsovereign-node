@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Webhooks, WebhookVerificationError } from "../src/webhooks";
+import type { ArenaEventPayload } from "../src/types";
 
 const SECRET = "whsec_test_secret_12345";
 
@@ -79,6 +80,24 @@ describe("Webhooks", () => {
       });
 
       expect(result.message.type).toBe("status-update");
+    });
+
+    it("verifies an Arena event, typed with a type argument", () => {
+      const payload = JSON.stringify({
+        message: {
+          id: "evt_1",
+          type: "arena.run.completed",
+          timestamp: "2026-10-20T02:14:00Z",
+          arena: { suite_id: "s1", schedule_id: "sc1", run_id: "r1" },
+        },
+      });
+      const { signature, timestamp } = Webhooks.sign(payload, SECRET);
+
+      const event = Webhooks.verify<ArenaEventPayload>({ payload, signature, timestamp, secret: SECRET });
+
+      expect(event.message.id).toBe("evt_1");
+      expect(event.message.type).toBe("arena.run.completed");
+      expect(event.message.arena.run_id).toBe("r1");
     });
 
     it("rejects invalid signature", () => {

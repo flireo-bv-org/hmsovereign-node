@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { MockHttpClient } from "./mock-client";
 import type { HttpClient } from "../src/client";
 import { AnalysisTemplates } from "../src/resources/analysis-templates";
+import { Arena } from "../src/resources/arena";
 import { Assistants } from "../src/resources/assistants";
 import { BYOK } from "../src/resources/byok";
 import { Calls } from "../src/resources/calls";
@@ -29,6 +30,7 @@ const NOT_WRAPPED: Record<string, string> = {
 
 const RESOURCES = [
   AnalysisTemplates,
+  Arena,
   Assistants,
   BYOK,
   Calls,

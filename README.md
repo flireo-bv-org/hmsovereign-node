@@ -64,6 +64,24 @@ if (event.message.type === 'end-of-call-report') {
 }
 ```
 
+Arena routines send their events with the same signature, signed with the webhook secret of your organization. They are not part of `WebhookPayload`, so name the payload type when an endpoint receives them:
+
+```typescript
+import { Webhooks, type ArenaEventPayload, type WebhookPayload } from 'hmsovereign';
+
+const event = Webhooks.verify<WebhookPayload | ArenaEventPayload>({
+  payload: rawBody,
+  signature: signatureHeader,
+  timestamp: timestampHeader,
+  secret: process.env.WEBHOOK_SECRET!,
+});
+
+if (event.message.type === 'arena.regression.detected') {
+  // The same id on every delivery of this event
+  console.log(event.message.id, event.message.arena.suite_id);
+}
+```
+
 ## Documentation
 
 The full reference, including call control, pagination, campaigns and error handling, is on [doc.voicedock.ai](https://doc.voicedock.ai/docs/sdks/node). The [API reference](https://doc.voicedock.ai/docs/api/assistants/listAssistants) documents the underlying REST API.

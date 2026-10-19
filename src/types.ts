@@ -162,6 +162,16 @@ export interface STTConfig {
   translation_enabled?: boolean;
   /** Gladia only */
   translation_target_languages?: string[];
+  /**
+   * Deepgram Flux (`flux-general-multi`) only, 0.5 to 0.9 (default 0.7): how sure Flux must
+   * be that the caller's turn is over.
+   */
+  eot_threshold?: number;
+  /**
+   * Deepgram Flux (`flux-general-multi`) only, 0.3 to 0.9 (off by default): lets the
+   * assistant start preparing a reply when the turn is probably over.
+   */
+  eager_eot_threshold?: number;
 }
 
 // --- LLM Config ---
@@ -1372,6 +1382,8 @@ export interface WebhookCallInfo {
   /** How the call reached the platform. `whatsapp` for a call placed from WhatsApp. */
   channel?: CallChannel;
   status: string;
+  /** Only on calls that are part of an Arena test, on the tested assistant */
+  arena?: WebhookCallArena;
 }
 
 export interface WebhookPhoneNumber {
@@ -1447,3 +1459,367 @@ export type WebhookPayload =
   | StatusUpdatePayload
   | ToolCallsPayload
   | EndOfCallReportPayload;
+
+// ============================================================================
+// Arena: test calls
+// ============================================================================
+
+export interface ArenaSuite {
+  id: string;
+  name: string;
+  /** The assistant under test */
+  assistant_id: string;
+  /** Your number that routes to the assistant; the test caller calls it */
+  number_id: string;
+  /** Your number the test caller calls from, over your own SIP trunk */
+  caller_number_id: string;
+  created_at: string;
+  updated_at?: string;
+  /** Current test cases (only returned by getSuite) */
+  cases?: ArenaCase[];
+}
+
+export interface ArenaSuiteCreateParams {
+  name: string;
+  assistant_id: string;
+  number_id: string;
+  /** Another number of yours with its own SIP trunk. A managed number cannot place calls. */
+  caller_number_id: string;
+}
+
+export interface ArenaEntity {
+  key: string;
+  label?: string;
+  value: string;
+  /** How the caller says it. Default: each digit and letter spelled out. */
+  spoken?: string;
+}
+
+export interface ArenaTimelineEvent {
+  type: "noise" | "voice" | "barge_in" | "silence" | "dtmf" | "hangup";
+  /** Seconds after the call was answered. Give either at_s or at_turn. */
+  at_s?: number;
+  /** The n-th turn of the assistant, from 1 */
+  at_turn?: number;
+  [field: string]: unknown;
+}
+
+export interface ArenaToolMode {
+  mode: "live" | "mock" | "fault";
+  response?: unknown;
+  fault?: "error" | "timeout" | "delay";
+  message?: string;
+  delay_ms?: number;
+  then?: "live" | "mock";
+}
+
+export type ArenaCriterionKind =
+  | "must"
+  | "must_not"
+  | "audio_must"
+  | "tool_required"
+  | "tool_forbidden"
+  | "transfer_expected"
+  | "hangup_expected"
+  | "entity_recall"
+  | "latency_max";
+
+export interface ArenaCriterion {
+  id: string;
+  kind: ArenaCriterionKind;
+  severity?: "normal" | "critical";
+  text?: string;
+  tool?: string;
+  arguments?: Record<string, unknown>;
+  destination?: string;
+  by?: "assistant" | "caller";
+  entity?: string;
+  stages?: ("understood" | "tool" | "repeated")[];
+  metric?: string;
+  max_ms?: number;
+}
+
+export interface ArenaCaseSaveParams {
+  /** Saving with an existing key creates a new version */
+  key: string;
+  status?: "proposed" | "active";
+  goal: string;
+  tester_kind?: "speech_to_speech" | "scripted";
+  tester_model?: "primary" | "secondary";
+  persona_id?: string;
+  language?: "nl" | "en";
+  audio_profile_id?: string;
+  channel?: "clean" | "speakerphone" | "muffled" | "packet_loss";
+  channel_params?: Record<string, unknown>;
+  timeline?: ArenaTimelineEvent[];
+  facts?: Record<string, unknown>;
+  entities?: ArenaEntity[];
+  /** Every tool of the assistant needs a choice. There is no default. */
+  tool_mode?: Record<string, ArenaToolMode>;
+  max_duration_s?: number;
+  criteria: ArenaCriterion[];
+  source_call_ids?: string[];
+}
+
+export interface ArenaCase extends Omit<ArenaCaseSaveParams, "status"> {
+  id: string;
+  suite_id: string;
+  version: number;
+  status: "proposed" | "active" | "retired";
+  language_plan?: { language: string };
+  created_by?: "ai" | "user";
+  created_at?: string;
+}
+
+export interface ArenaCaseListParams {
+  /** Include retired versions */
+  include_retired?: boolean;
+}
+
+export interface ArenaRunStartParams {
+  /** Attempts per test case, 1 to 5 */
+  repeats?: number;
+  /** Only these active cases. Default: all active cases. */
+  case_ids?: string[];
+  /** "ci" marks a run started from your CI, so the trend can tell them apart. */
+  trigger?: "manual" | "ci";
+}
+
+export interface ArenaRunEstimate {
+  /** Estimated cost of the run in euros, on both legs and including the judge. An estimate, not an upper bound. */
+  max_cost_eur: number;
+  /** The same estimate in credits. A run only starts when your balance covers it. */
+  max_credits: number;
+  attempts: number;
+  /** False if a price was missing and a conservative rate was used */
+  complete: boolean;
+}
+
+export type ArenaVoidReason =
+  | "no_answer"
+  | "no_agent"
+  | "not_routed_to_assistant"
+  | "caller_id_mismatch"
+  | "caller_trunk_rejected"
+  | "credit_cap"
+  | "transcript_missing"
+  | "infra"
+  | "tester_error"
+  | "tester_unavailable"
+  /** The case was retired, or replaced by a newer version, after the run started */
+  | "case_retired";
+
+export interface ArenaVerdict {
+  criterion_id: string;
+  outcome: "pass" | "fail" | "not_applicable";
+  source: "fact" | "acoustic" | "judge" | "audio_judge";
+  evidence_quote?: string | null;
+  turn_index?: number | null;
+  reasoning?: string | null;
+  judge_prompt_version?: string | null;
+  override_outcome?: string | null;
+}
+
+export interface ArenaMetric {
+  metric_id: string;
+  metric_version: string;
+  value: number;
+  unit: string;
+}
+
+export interface ArenaAttempt {
+  id: string;
+  case_id: string;
+  attempt_no: number;
+  status: "queued" | "claimed" | "dialing" | "in_call" | "awaiting_transcript" | "judging" | "scored" | "void" | "failed";
+  void_reason?: ArenaVoidReason | null;
+  last_error?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  latency?: Record<string, unknown> | null;
+  /** The call of the test caller */
+  tester_call_id?: string | null;
+  /** The call on your assistant */
+  target_call_id?: string | null;
+  /**
+   * Signed URLs of the recording per track, valid as long as the call recording.
+   * Deleted with the calls under your retention period.
+   */
+  recordings?: ArenaAttemptRecordings | null;
+  verdicts?: ArenaVerdict[];
+  metrics?: ArenaMetric[];
+}
+
+export interface ArenaAttemptRecordings {
+  /** The voice of the test caller */
+  tester?: string;
+  /** What the timeline played: noise and voices */
+  events?: string;
+  /** What the test caller heard from the line */
+  assistant?: string;
+  /** What your assistant received */
+  received?: string;
+}
+
+export interface ArenaRun {
+  id: string;
+  suite_id: string;
+  /** The assistant under test */
+  assistant_id: string;
+  /**
+   * `cancelled` when the run was cancelled, also when an attempt that was in progress at that
+   * moment finished afterwards.
+   */
+  status: "queued" | "running" | "done" | "cancelled";
+  trigger: string;
+  repeats: number;
+  /** The estimated cost in euros at the start of the run. An estimate, not an upper bound. */
+  estimated_max_cost_eur?: number | null;
+  /** Hash of the assistant configuration at the start of the run */
+  config_hash?: string | null;
+  created_at: string;
+  started_at?: string | null;
+  finished_at?: string | null;
+  estimate?: ArenaRunEstimate;
+  attempts?: ArenaAttempt[];
+}
+
+export type ArenaCatalog = Record<string, unknown>;
+
+/** On calls that are part of an Arena test, on the tested assistant */
+export interface WebhookCallArena {
+  attempt_id: string;
+  run_id: string;
+  case_id: string;
+  suite_id: string;
+}
+
+// ============================================================================
+// Arena: routines, trend and events
+// ============================================================================
+
+export interface ArenaScheduleSaveParams {
+  /** A routine is off until you enable it. */
+  enabled?: boolean;
+  cadence?: "daily" | "weekly";
+  /** Required for weekly: 0 is Sunday. */
+  weekday?: number | null;
+  /** Start of the window, as HH:MM in `timezone`, for example "02:00". */
+  window_start?: string;
+  /** End of the window, as HH:MM. Each routine starts at a fixed moment within it. */
+  window_end?: string;
+  timezone?: string;
+  repeats?: number;
+  /** Required. At the budget the routine pauses and sends arena.schedule.paused. */
+  monthly_budget_eur: number;
+  /** Also run after the configuration of the assistant changed (after 15 quiet minutes). */
+  on_config_change?: boolean;
+  /** Also run after a platform release. */
+  on_platform_release?: boolean;
+  /**
+   * Where the Arena events of this routine go: an https URL on a public hostname, on port 443.
+   * Without it, they go to the webhook of your organization.
+   */
+  webhook_url?: string | null;
+  /** Also e-mail regressions and pauses to the owners and admins of your organization (default true). */
+  notify_email?: boolean;
+}
+
+export interface ArenaSchedule extends Required<Omit<ArenaScheduleSaveParams, "weekday" | "webhook_url">> {
+  id: string;
+  suite_id: string;
+  weekday: number | null;
+  /** Start of the window, as HH:MM in `timezone`, for example "02:00". */
+  window_start: string;
+  /** End of the window, as HH:MM. */
+  window_end: string;
+  webhook_url: string | null;
+  /** Actual cost of its finished runs this month, plus the estimate of runs in progress. */
+  spent_this_month_eur: number;
+  /** Estimated cost of one run, in credits, as last estimated. An estimate, not an upper bound. */
+  estimated_run_credits: number;
+  paused_reason: "budget" | "insufficient_credits" | "failed_to_start" | null;
+  paused_detail: string | null;
+  paused_at: string | null;
+  next_run_at: string | null;
+  last_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ArenaTrendCell {
+  /** Passed */
+  k: number;
+  /** Judged (not_applicable does not count) */
+  n: number;
+  /** Lower bound of the 95% Wilson interval */
+  low: number;
+  /** Upper bound of the 95% Wilson interval */
+  high: number;
+}
+
+export interface ArenaRegression {
+  case_key: string;
+  criterion_id: string;
+  critical: boolean;
+  detected_run_id: string | null;
+  detail: {
+    current?: { passed: number; judged: number };
+    baseline?: { passed: number; judged: number };
+    p_value?: number | null;
+    config_changed?: boolean;
+  };
+  opened_at: string;
+}
+
+export interface ArenaTrend {
+  /** Compare with config_hash of a run: different means the result is outdated. */
+  current_config_hash: string;
+  runs: {
+    id: string;
+    created_at: string;
+    trigger: "manual" | "schedule" | "config_change" | "platform_release" | "ci";
+    status: string;
+    config_hash: string | null;
+    platform_version: Record<string, unknown> | null;
+  }[];
+  rows: { case_key: string; criterion_id: string; per_run: Record<string, ArenaTrendCell> }[];
+  open_regressions: ArenaRegression[];
+}
+
+export interface ArenaTrendParams {
+  /** Number of runs, 1 to 50 (default 20). */
+  limit?: number;
+}
+
+/** The arena object of an Arena event. */
+export interface ArenaEventData {
+  suite_id: string;
+  schedule_id: string;
+  run_id?: string;
+  [key: string]: unknown;
+}
+
+export type ArenaEventType =
+  | "arena.run.completed"
+  | "arena.regression.detected"
+  | "arena.regression.resolved"
+  | "arena.schedule.paused";
+
+/**
+ * An event of an Arena routine. Only sent for a suite with a routine, to the `webhook_url` of the
+ * routine or else to the webhook of your organization. Same envelope and signature as the call
+ * webhooks, signed with the webhook secret of your organization.
+ *
+ * Not part of `WebhookPayload`. Verify it with `Webhooks.verify<ArenaEventPayload>()`, or with
+ * `Webhooks.verify<WebhookPayload | ArenaEventPayload>()` on an endpoint that receives both.
+ */
+export interface ArenaEventPayload {
+  message: {
+    /** The id of the event. It is the same on every delivery of the event: use it to drop duplicates. */
+    id: string;
+    type: ArenaEventType;
+    timestamp: string;
+    arena: ArenaEventData;
+  };
+}

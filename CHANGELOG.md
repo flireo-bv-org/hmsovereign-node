@@ -4,6 +4,20 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-10-19
+
+### Added
+
+- `client.arena`, to test an assistant with real phone calls. A test caller with a persona and a goal calls your number, and after the call every criterion of the test case gets a verdict with its evidence. Suites with `listSuites()`, `createSuite()`, `getSuite()` and `deleteSuite()`; test cases with `listCases()`, `saveCase()`, `getCase()` and `updateCaseStatus()`; runs with `listRuns()`, `startRun()`, `getRun()` and `cancelRun()`; and `getCatalog()` for the personas, audio profiles, timeline events, channels, criterion kinds and metrics. Saving a case with an unchanged definition returns the latest version instead of creating a new one. Test calls are real calls and are billed as such, on both legs. Arena is in beta and available on request: until it is enabled for your organization, these methods throw an `ApiRequestError` with status `403`. See https://doc.voicedock.ai/docs/features/arena.
+- `arena.getSchedule()`, `arena.saveSchedule()` and `arena.deleteSchedule()`, to run the active cases of a suite with a routine: daily or weekly within a time window, and optionally also after the configuration of the assistant changed or after a platform release. A routine is off until you enable it and always has a monthly budget; at the budget it pauses.
+- `arena.getTrend()`, with the pass rates per case and criterion over the latest runs and the open regressions.
+- `trigger: "ci"` on `arena.startRun()`, to mark a run started from your CI so the trend can tell it apart.
+- `ArenaEventPayload`, the events of a routine: `arena.run.completed`, `arena.regression.detected`, `arena.regression.resolved` and `arena.schedule.paused`. Each event has an `id` that stays the same on every delivery, so you can drop duplicates. Arena events are not part of `WebhookPayload`, so existing webhook handlers keep compiling.
+- `Webhooks.verify()` takes an optional type argument for the payload, such as `Webhooks.verify<ArenaEventPayload>()` or `Webhooks.verify<WebhookPayload | ArenaEventPayload>()` on an endpoint that receives both. Without it, it returns `WebhookPayload` as before.
+- `arena` on `WebhookCallInfo`. On the tested assistant, the webhooks of a test call name the attempt, run, case and suite, so you can keep test calls out of your own systems.
+- `eot_threshold` and `eager_eot_threshold` on `STTConfig`, for Deepgram Flux Multilingual (`stt_config.model: "flux-general-multi"`), speech recognition that decides itself when the caller is done. Model names are plain strings, so `flux-general-multi` and `grok-voice-3.0` need no type change.
+- New exported types: `ArenaAttempt`, `ArenaAttemptRecordings`, `ArenaCase`, `ArenaCaseListParams`, `ArenaCaseSaveParams`, `ArenaCatalog`, `ArenaCriterion`, `ArenaCriterionKind`, `ArenaEntity`, `ArenaEventData`, `ArenaEventPayload`, `ArenaEventType`, `ArenaMetric`, `ArenaRegression`, `ArenaRun`, `ArenaRunEstimate`, `ArenaRunStartParams`, `ArenaSchedule`, `ArenaScheduleSaveParams`, `ArenaSuite`, `ArenaSuiteCreateParams`, `ArenaTimelineEvent`, `ArenaToolMode`, `ArenaTrend`, `ArenaTrendCell`, `ArenaTrendParams`, `ArenaVerdict`, `ArenaVoidReason` and `WebhookCallArena`.
+
 ## [2.3.1] - 2026-10-18
 
 ### Removed

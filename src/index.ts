@@ -14,6 +14,7 @@ import { AnalysisTemplates } from "./resources/analysis-templates";
 import { Domains } from "./resources/domains";
 import { Organizations } from "./resources/organizations";
 import { Workflows } from "./resources/workflows";
+import { Arena } from "./resources/arena";
 
 export class HMSSovereign {
   readonly assistants: Assistants;
@@ -30,6 +31,7 @@ export class HMSSovereign {
   readonly domains: Domains;
   readonly organizations: Organizations;
   readonly workflows: Workflows;
+  readonly arena: Arena;
 
   constructor(options: ClientOptions) {
     const client = new HttpClient(options);
@@ -48,6 +50,7 @@ export class HMSSovereign {
     this.domains = new Domains(client);
     this.organizations = new Organizations(client);
     this.workflows = new Workflows(client);
+    this.arena = new Arena(client);
   }
 }
 
@@ -228,8 +231,39 @@ export type {
   WorkflowNodeWebhookTool,
   WorkflowNodeUi,
 
+  // Arena
+  ArenaSuite,
+  ArenaSuiteCreateParams,
+  ArenaEntity,
+  ArenaTimelineEvent,
+  ArenaToolMode,
+  ArenaCriterionKind,
+  ArenaCriterion,
+  ArenaCaseSaveParams,
+  ArenaCase,
+  ArenaCaseListParams,
+  ArenaRunStartParams,
+  ArenaRunEstimate,
+  ArenaVoidReason,
+  ArenaVerdict,
+  ArenaMetric,
+  ArenaAttempt,
+  ArenaAttemptRecordings,
+  ArenaSchedule,
+  ArenaScheduleSaveParams,
+  ArenaTrend,
+  ArenaTrendCell,
+  ArenaTrendParams,
+  ArenaRegression,
+  ArenaEventData,
+  ArenaEventPayload,
+  ArenaEventType,
+  ArenaRun,
+  ArenaCatalog,
+
   // Webhooks
   WebhookCallInfo,
+  WebhookCallArena,
   WebhookPhoneNumber,
   WebhookCustomer,
   WebhookBasePayload,

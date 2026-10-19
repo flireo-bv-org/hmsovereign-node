@@ -3,6 +3,7 @@ import { MockHttpClient } from "./mock-client";
 import { HMSSovereign, ApiRequestError } from "../src/index";
 import { Assistants } from "../src/resources/assistants";
 import { Calls } from "../src/resources/calls";
+import { Arena } from "../src/resources/arena";
 import { Numbers } from "../src/resources/numbers";
 import { SipTrunks } from "../src/resources/sip-trunks";
 import { Voices } from "../src/resources/voices";
@@ -977,5 +978,128 @@ describe("McpServers", () => {
     const client = new HMSSovereign({ apiKey: "test" });
 
     expect(client.mcpServers).toBeInstanceOf(McpServers);
+  });
+});
+
+describe("Arena", () => {
+  it("createSuite() posts assistant_id and unwraps { arena_suite }", async () => {
+    mock.onRequest("POST", "/arena/suites", {
+      arena_suite: { id: "s1", name: "Core set", assistant_id: "a1", number_id: "n1", caller_number_id: "n2", created_at: "2026-10-18T00:00:00Z" },
+    });
+
+    const arena = new Arena(mock as any);
+    const suite = await arena.createSuite({ name: "Core set", assistant_id: "a1", number_id: "n1", caller_number_id: "n2" });
+
+    expect(mock.lastRequest.body).toEqual({ name: "Core set", assistant_id: "a1", number_id: "n1", caller_number_id: "n2" });
+    expect(suite.assistant_id).toBe("a1");
+  });
+
+  it("saveCase() posts the case with catalog ids and unwraps { arena_case }", async () => {
+    mock.onRequest("POST", "/arena/suites/s1/cases", {
+      arena_case: { id: "c1", suite_id: "s1", key: "book", version: 1, status: "active", goal: "Book", criteria: [] },
+    });
+
+    const arena = new Arena(mock as any);
+    const saved = await arena.saveCase("s1", {
+      key: "book",
+      status: "active",
+      goal: "Book",
+      persona_id: "customer-clear",
+      audio_profile_id: "street",
+      criteria: [],
+    });
+
+    expect(mock.lastRequest.body).toMatchObject({ persona_id: "customer-clear", audio_profile_id: "street" });
+    expect(saved.version).toBe(1);
+  });
+
+  it("startRun() posts repeats and unwraps { arena_run } with its estimate", async () => {
+    mock.onRequest("POST", "/arena/suites/s1/runs", {
+      arena_run: { id: "r1", status: "queued", estimate: { max_cost_eur: 1.2, max_credits: 18, attempts: 3, complete: true } },
+    });
+
+    const arena = new Arena(mock as any);
+    const run = await arena.startRun("s1", { repeats: 3 });
+
+    expect(mock.lastRequest.body).toEqual({ repeats: 3 });
+    expect(run.estimate?.attempts).toBe(3);
+  });
+
+  it("listCases() asks for retired versions only when requested", async () => {
+    mock.onRequest("GET", "/arena/suites/s1/cases", { arena_cases: [] });
+
+    const arena = new Arena(mock as any);
+    await arena.listCases("s1");
+    expect(mock.lastRequest.query).toBeUndefined();
+    await arena.listCases("s1", { include_retired: true });
+    expect(mock.lastRequest.query).toEqual({ include_retired: true });
+  });
+
+  it("cancelRun() returns the number of attempts that were still queued", async () => {
+    mock.onRequest("POST", "/arena/runs/r1/cancel", { cancelled_attempts: 4 });
+
+    const arena = new Arena(mock as any);
+    expect(await arena.cancelRun("r1")).toBe(4);
+  });
+
+  it("saveSchedule() puts the routine and unwraps { arena_schedule }", async () => {
+    mock.onRequest("PUT", "/arena/suites/s1/schedule", {
+      arena_schedule: {
+        id: "sc1",
+        suite_id: "s1",
+        enabled: true,
+        window_start: "02:00",
+        window_end: "05:00",
+        monthly_budget_eur: 25,
+        spent_this_month_eur: 0,
+      },
+    });
+
+    const arena = new Arena(mock as any);
+    const schedule = await arena.saveSchedule("s1", {
+      enabled: true,
+      monthly_budget_eur: 25,
+      cadence: "daily",
+      window_start: "02:00",
+      window_end: "05:00",
+    });
+
+    expect(mock.lastRequest.method).toBe("PUT");
+    expect(mock.lastRequest.body).toEqual({
+      enabled: true,
+      monthly_budget_eur: 25,
+      cadence: "daily",
+      window_start: "02:00",
+      window_end: "05:00",
+    });
+    expect(schedule.monthly_budget_eur).toBe(25);
+    expect(schedule.window_start).toBe("02:00");
+  });
+
+  it("getSchedule() returns null when the suite has no routine", async () => {
+    mock.onRequest("GET", "/arena/suites/s1/schedule", { arena_schedule: null });
+
+    const arena = new Arena(mock as any);
+    expect(await arena.getSchedule("s1")).toBeNull();
+  });
+
+  it("deleteSchedule() deletes the routine", async () => {
+    mock.onRequest("DELETE", "/arena/suites/s1/schedule", { success: true });
+
+    const arena = new Arena(mock as any);
+    await arena.deleteSchedule("s1");
+    expect(mock.lastRequest.method).toBe("DELETE");
+  });
+
+  it("getTrend() passes limit and unwraps { arena_trend }", async () => {
+    mock.onRequest("GET", "/arena/suites/s1/trend", {
+      arena_trend: { current_config_hash: "h", runs: [], rows: [], open_regressions: [] },
+    });
+
+    const arena = new Arena(mock as any);
+    const trend = await arena.getTrend("s1", { limit: 5 });
+
+    expect(mock.lastRequest.query).toEqual({ limit: 5 });
+    expect(trend.current_config_hash).toBe("h");
   });
 });
