@@ -63,6 +63,9 @@ describe("assistant configuration", () => {
     expectTypeOf<NonNullable<LLMConfig["turn_detection"]>["silence_duration_ms"]>().toEqualTypeOf<
       number | undefined
     >();
+    expectTypeOf<NonNullable<LLMConfig["turn_detection"]>["eagerness"]>().toEqualTypeOf<
+      "low" | "medium" | "high" | undefined
+    >();
     expectTypeOf<TTSConfig["speaking_rate"]>().toEqualTypeOf<number | undefined>();
   });
 

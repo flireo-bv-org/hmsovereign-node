@@ -88,6 +88,8 @@ export type {
   GoogleRealtimeVoice,
   XAIRealtimeVoice,
   OpenAILiveVoice,
+  ElevenLabsRealtimeVoice,
+  ElevenLabsRealtimeTurnDetection,
   LLMDelegation,
   XAITurnDetection,
   LLMMessage,

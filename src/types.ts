@@ -48,7 +48,7 @@ export const TEXT_LLM_PROVIDERS = ["openai", "xai", "mistral", "google"] as cons
 export type TextLLMProvider = (typeof TEXT_LLM_PROVIDERS)[number];
 
 /** Realtime (speech-to-speech) LLM providers. */
-export const REALTIME_LLM_PROVIDERS = ["google_realtime", "xai_realtime", "openai_live"] as const;
+export const REALTIME_LLM_PROVIDERS = ["google_realtime", "xai_realtime", "openai_live", "elevenlabs_realtime"] as const;
 
 export type RealtimeLLMProvider = (typeof REALTIME_LLM_PROVIDERS)[number];
 
@@ -135,6 +135,12 @@ export const OPENAI_LIVE_VOICES = ["marin", "beacon", "cinder", "stone", "vesper
 
 export type OpenAILiveVoice = (typeof OPENAI_LIVE_VOICES)[number];
 
+/**
+ * Voice of an ElevenLabs Realtime assistant (`llm_config.provider: "elevenlabs_realtime"`):
+ * any voice id from your ElevenLabs voice library, or a named voice such as `"brian"` (the default).
+ */
+export type ElevenLabsRealtimeVoice = "brian" | (string & {});
+
 // --- STT Config ---
 
 export interface STTConfig {
@@ -201,7 +207,7 @@ export interface LLMConfig {
   provider: LLMProvider;
   model: string;
   /** Realtime providers only: the speech-to-speech voice of the model */
-  voice?: GoogleRealtimeVoice | XAIRealtimeVoice | OpenAILiveVoice;
+  voice?: GoogleRealtimeVoice | XAIRealtimeVoice | OpenAILiveVoice | ElevenLabsRealtimeVoice;
   temperature?: number;
   /**
    * `openai` and `google` only (1-32768): the most tokens the model may produce
@@ -210,8 +216,11 @@ export interface LLMConfig {
   max_completion_tokens?: number;
   /** `openai_live` only: the backend model the voice model hands reasoning and tool calls to */
   delegation?: LLMDelegation;
-  /** `xai_realtime` only: server-side turn detection. Omitted fields use the provider default. */
-  turn_detection?: XAITurnDetection;
+  /**
+   * `xai_realtime` and `elevenlabs_realtime` only: turn detection. Which fields apply
+   * depends on the provider; omitted fields use the provider default.
+   */
+  turn_detection?: XAITurnDetection & ElevenLabsRealtimeTurnDetection;
   messages?: LLMMessage[];
   tools?: Array<ToolDefinition | McpToolDefinition>;
 }
@@ -236,6 +245,12 @@ export interface LLMDelegation {
    * system prompt as the voice model.
    */
   instructions?: string;
+}
+
+/** Turn detection of an `elevenlabs_realtime` assistant. */
+export interface ElevenLabsRealtimeTurnDetection {
+  /** `elevenlabs_realtime` only. How soon the model decides the caller has finished: `"low"` waits longer, `"high"` answers sooner. Defaults to `"medium"`. */
+  eagerness?: "low" | "medium" | "high";
 }
 
 /** Turn detection of an `xai_realtime` assistant. Values outside the ranges are clamped. */

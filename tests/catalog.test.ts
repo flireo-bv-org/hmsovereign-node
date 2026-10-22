@@ -29,6 +29,7 @@ interface CatalogProvider {
   id: string;
   kind?: string;
   voices?: string[];
+  voice_id?: string;
 }
 
 interface Catalog {
@@ -78,10 +79,13 @@ describe("config catalog", () => {
     expect(voicesOf("openai_live")).toEqual(sorted(OPENAI_LIVE_VOICES));
   });
 
-  it("has a realtime voice list for every realtime provider", () => {
-    // A realtime provider without a voice union in the SDK would make its voices
-    // unexpressible in llm_config.voice.
-    const withVoices = catalog.llm.providers.filter((p) => p.kind === "realtime" && p.voices).map((p) => p.id);
-    expect(sorted(withVoices)).toEqual(sorted(REALTIME_LLM_PROVIDERS));
+  it("has a voice type for every realtime provider", () => {
+    // A realtime provider with a fixed voice list needs a voice union in the SDK; one
+    // whose catalog entry says voice_id: "free" (any id from the provider's library)
+    // is expressed as a string. Anything else would make its voices unexpressible in
+    // llm_config.voice.
+    const realtime = catalog.llm.providers.filter((p) => p.kind === "realtime");
+    const covered = realtime.filter((p) => p.voices || p.voice_id === "free").map((p) => p.id);
+    expect(sorted(covered)).toEqual(sorted(REALTIME_LLM_PROVIDERS));
   });
 });

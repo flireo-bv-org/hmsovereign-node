@@ -4,6 +4,18 @@ All notable changes to this package are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-10-22
+
+### Added
+
+- `"elevenlabs_realtime"` in `REALTIME_LLM_PROVIDERS` and `LLMProvider`, for ElevenLabs Realtime: speech recognition, the conversation and an ElevenLabs voice behind one connection. Models are `eleven_realtime_v1_max` (the default) and `eleven_realtime_v1_mini`. See https://doc.voicedock.ai/docs/integrations/elevenlabs-realtime-integration.
+- `ElevenLabsRealtimeVoice`: on this provider `llm_config.voice` takes any voice id from your ElevenLabs voice library, or a named voice such as `"brian"` (the default).
+- `eagerness` on `llm_config.turn_detection` (`ElevenLabsRealtimeTurnDetection`): `"low"`, `"medium"` (the default) or `"high"`, for how soon an ElevenLabs Realtime assistant decides the caller has finished.
+
+### Changed
+
+- `LLMConfig.turn_detection` is now `XAITurnDetection & ElevenLabsRealtimeTurnDetection`. Code that reads or sets the xAI fields keeps compiling.
+
 ## [2.4.0] - 2026-10-19
 
 ### Added
